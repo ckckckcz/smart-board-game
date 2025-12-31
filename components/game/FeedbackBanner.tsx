@@ -11,41 +11,45 @@ const FeedbackBanner = () => {
 
   return (
     <div className={`
-      w-full max-w-md mx-auto p-6 rounded-2xl shadow-xl
-      ${lastAnswerCorrect ? 'bg-green-600 shadow-green-500/50 animate-success' : 'bg-red-600 shadow-red-500/50 animate-error'}
+      relative w-full max-w-md mx-auto p-1 rounded-3xl shadow-2xl overflow-hidden
+      ${lastAnswerCorrect
+        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30'
+        : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/30'}
+      animate-scale-in
     `}>
-      <div className="flex flex-col items-center text-center">
-        {lastAnswerCorrect ? (
-          <>
-            <CheckCircle className="w-16 h-16 text-white mb-3" />
-            <h3 className="text-2xl font-black text-white mb-1">BENAR!</h3>
-            <p className="text-white/90 font-semibold">
-              +{currentQuestion?.points || 100} poin
-            </p>
-          </>
-        ) : (
-          <>
-            <XCircle className="w-16 h-16 text-white mb-3" />
-            <h3 className="text-2xl font-black text-white mb-1">SALAH!</h3>
-            <p className="text-white/90 font-semibold">
-              0 poin
-            </p>
-          </>
-        )}
+      <div className="bg-black/10 backdrop-blur-sm rounded-[22px] p-8">
+        <div className="flex flex-col items-center text-center">
 
-        <Button
-          onClick={nextQuestion}
-          className={`
-            mt-4 h-12 px-8 font-bold rounded-xl cursor-pointer
-            ${lastAnswerCorrect
-              ? 'bg-white/20 hover:bg-white/30 text-white'
-              : 'bg-white/20 hover:bg-white/30 text-white'
-            }
-          `}
-        >
-          LANJUT
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+          {/* Animated Icon Container */}
+          <div className={`
+            w-20 h-20 rounded-full flex items-center justify-center mb-4 shadow-lg
+            ${lastAnswerCorrect ? 'bg-white/20 text-white' : 'bg-white/20 text-white'}
+          `}>
+            {lastAnswerCorrect ? (
+              <CheckCircle className="w-10 h-10 drop-shadow-md animate-bounce" />
+            ) : (
+              <XCircle className="w-10 h-10 drop-shadow-md animate-shake" />
+            )}
+          </div>
+
+          <h3 className="text-3xl font-black text-white mb-2 tracking-tight drop-shadow-sm">
+            {lastAnswerCorrect ? 'LUAR BIASA!' : 'OOPS!'}
+          </h3>
+
+          <div className="px-4 py-1.5 rounded-full bg-black/20 text-white/90 font-bold text-sm mb-6 border border-white/10">
+            {lastAnswerCorrect
+              ? `+${currentQuestion?.points || 100} Poin Ditambahkan`
+              : 'Jangan menyerah, coba lagi!'}
+          </div>
+
+          <Button
+            onClick={nextQuestion}
+            className="w-full h-14 font-bold rounded-2xl cursor-pointer bg-white text-slate-900 hover:bg-slate-100 hover:scale-[1.02] shadow-xl transition-all group"
+          >
+            LANJUT KE SOAL BERIKUTNYA
+            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
       </div>
     </div>
   );
