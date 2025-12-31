@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useGameStore } from '@/hooks/useGameStore';
 import DecorativeElements from '@/components/react-bits/background';
 import { Badge } from '@/components/ui/badge';
+import ConfettiAnimation from '@/components/ui/confentti';
 
 export default function ResultsPage() {
     const router = useRouter();
@@ -58,6 +59,7 @@ export default function ResultsPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 relative overflow-hidden font-sans text-slate-200 flex items-center justify-center p-4">
+            <ConfettiAnimation />
 
             {/* Dynamic Background */}
             <div className="absolute inset-0 z-0 opacity-40">

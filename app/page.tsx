@@ -60,9 +60,6 @@ export default function StartScreen() {
             </h2>
             <span className="h-px w-8 bg-indigo-500/50" />
           </div>
-          <p className="text-slate-400 font-medium max-w-xs mx-auto text-sm md:text-base bg-slate-900/50 py-1 px-3 rounded-full border border-white/5 backdrop-blur-sm">
-            Game Edukasi Akuntansi Interaktif
-          </p>
         </div>
 
         {/* Main Card */}
