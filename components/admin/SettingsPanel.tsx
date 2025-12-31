@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react';
 import { Eye, EyeOff, Key, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,19 +25,19 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
       toast.error('Semua field harus diisi');
       return;
     }
-    
+
     if (newPin !== confirmPin) {
       toast.error('PIN baru tidak cocok');
       return;
     }
-    
+
     if (newPin.length < 4) {
       toast.error('PIN minimal 4 karakter');
       return;
     }
-    
+
     const success = updateAdminPin(oldPin, newPin);
-    
+
     if (success) {
       toast.success('PIN berhasil diubah!');
       setOldPin('');
@@ -52,11 +54,11 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
         <div className="w-12 h-12 rounded-md gradient-primary mx-auto mb-4 flex items-center justify-center">
           <Key className="w-6 h-6 text-primary-foreground" />
         </div>
-        
+
         <h3 className="text-xl font-bold text-center text-foreground mb-6">
           Ubah PIN Admin
         </h3>
-        
+
         <div className="space-y-4">
           {/* Old PIN */}
           <div>
@@ -80,7 +82,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
               </button>
             </div>
           </div>
-          
+
           {/* New PIN */}
           <div>
             <label className="text-sm font-semibold text-foreground mb-2 block">
@@ -103,7 +105,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
               </button>
             </div>
           </div>
-          
+
           {/* Confirm PIN */}
           <div>
             <label className="text-sm font-semibold text-foreground mb-2 block">
@@ -127,7 +129,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
             </div>
           </div>
         </div>
-        
+
         {/* Buttons */}
         <div className="flex gap-3 mt-6">
           <Button

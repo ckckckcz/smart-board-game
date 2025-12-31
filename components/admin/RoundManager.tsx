@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react';
 import { Plus, Trash2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,17 +17,17 @@ const RoundManager = () => {
 
   const handleAddRound = () => {
     if (!roundName.trim()) return;
-    
+
     const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0);
     if (totalQuestions === 0) return;
-    
+
     const newRound: Round = {
       id: `round_${Date.now()}`,
       name: roundName.trim(),
       questionCounts,
       totalQuestions,
     };
-    
+
     addRound(newRound);
     setRoundName('');
     setQuestionCounts({ C1: 0, C2: 0, C3: 0, C4: 0, C5: 0, C6: 0 });
@@ -48,7 +50,7 @@ const RoundManager = () => {
           <Plus className="w-5 h-5 text-primary" />
           Tambah Babak Baru
         </h3>
-        
+
         {/* Round Name */}
         <div className="mb-4">
           <label className="text-sm font-semibold text-foreground mb-2 block">
@@ -61,7 +63,7 @@ const RoundManager = () => {
             className="h-11 rounded-xl"
           />
         </div>
-        
+
         {/* Question Counts per Category */}
         <div className="mb-4">
           <label className="text-sm font-semibold text-foreground mb-3 block">
@@ -69,7 +71,7 @@ const RoundManager = () => {
           </label>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {(Object.keys(CATEGORY_LABELS) as QuestionCategory[]).map((category) => (
-              <div 
+              <div
                 key={category}
                 className="bg-muted/50 rounded-xl p-3"
               >
@@ -99,7 +101,7 @@ const RoundManager = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Total & Add Button */}
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">
@@ -115,14 +117,14 @@ const RoundManager = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Rounds List */}
       <div className="space-y-3">
         <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
           <Layers className="w-5 h-5 text-secondary" />
           Daftar Babak ({rounds.length})
         </h3>
-        
+
         {rounds.length === 0 ? (
           <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground">
             Belum ada babak. Tambahkan babak pertama!
@@ -130,7 +132,7 @@ const RoundManager = () => {
         ) : (
           <div className="grid gap-3">
             {rounds.map((round) => (
-              <div 
+              <div
                 key={round.id}
                 className="bg-card rounded-2xl shadow-soft p-4 flex items-start justify-between gap-4"
               >
@@ -142,7 +144,7 @@ const RoundManager = () => {
                   <div className="flex flex-wrap gap-1">
                     {(Object.keys(round.questionCounts) as QuestionCategory[]).map((cat) => (
                       round.questionCounts[cat] > 0 && (
-                        <span 
+                        <span
                           key={cat}
                           className="text-xs px-2 py-0.5 bg-secondary/10 text-secondary rounded-full font-medium"
                         >

@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,20 +28,20 @@ const QuestionBank = () => {
   const [questionText, setQuestionText] = useState('');
   const [timeLimit, setTimeLimit] = useState(3);
   const [points, setPoints] = useState(100);
-  
+
   // Essay
   const [essayAnswer, setEssayAnswer] = useState('');
-  
+
   // Multiple Choice
   const [optionA, setOptionA] = useState('');
   const [optionB, setOptionB] = useState('');
   const [optionC, setOptionC] = useState('');
   const [optionD, setOptionD] = useState('');
   const [correctOption, setCorrectOption] = useState<string>('');
-  
+
   // True/False
   const [trueFalseAnswer, setTrueFalseAnswer] = useState<string>('');
-  
+
   // Matching
   const [leftItem1, setLeftItem1] = useState('');
   const [leftItem2, setLeftItem2] = useState('');
@@ -69,7 +71,7 @@ const QuestionBank = () => {
 
   const handleAddQuestion = () => {
     if (!questionText.trim()) return;
-    
+
     const newQuestion: Question = {
       id: `q_${Date.now()}`,
       category,
@@ -104,7 +106,7 @@ const QuestionBank = () => {
         newQuestion.matchingAnswer = matchingAnswer.trim();
         break;
     }
-    
+
     addQuestion(newQuestion);
     resetForm();
   };
@@ -152,7 +154,7 @@ const QuestionBank = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label className="text-amber-500 font-semibold">Tipe Soal:</Label>
               <Select value={type} onValueChange={(v) => { setType(v as QuestionType); resetForm(); }}>
@@ -168,7 +170,7 @@ const QuestionBank = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label className="text-amber-500 font-semibold">Waktu (menit):</Label>
               <Input
@@ -179,7 +181,7 @@ const QuestionBank = () => {
                 max={30}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label className="text-amber-500 font-semibold">Poin:</Label>
               <Input
@@ -191,7 +193,7 @@ const QuestionBank = () => {
               />
             </div>
           </div>
-          
+
           {/* Question Text */}
           <div className="space-y-2">
             <Label className="text-amber-500 font-semibold">Pertanyaan:</Label>
@@ -202,7 +204,7 @@ const QuestionBank = () => {
               className="min-h-[80px] resize-none"
             />
           </div>
-          
+
           {/* Dynamic form based on type */}
           {type === 'essay' && (
             <div className="space-y-2">
@@ -214,7 +216,7 @@ const QuestionBank = () => {
               />
             </div>
           )}
-          
+
           {type === 'multiple_choice' && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -267,7 +269,7 @@ const QuestionBank = () => {
               </div>
             </>
           )}
-          
+
           {type === 'true_false' && (
             <div className="space-y-2">
               <Label className="text-amber-500 font-semibold">Jawaban Benar:</Label>
@@ -282,7 +284,7 @@ const QuestionBank = () => {
               </Select>
             </div>
           )}
-          
+
           {type === 'matching' && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -345,7 +347,7 @@ const QuestionBank = () => {
               </div>
             </>
           )}
-          
+
           <Button
             onClick={handleAddQuestion}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -355,7 +357,7 @@ const QuestionBank = () => {
           </Button>
         </CardContent>
       </Card>
-      
+
       {/* Questions List */}
       <Card>
         <CardHeader className="pb-4">

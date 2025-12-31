@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import { Clock, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,7 @@ import { useGameStore } from '@/hooks/useGameStore';
 const QuestionPopup = () => {
   const { currentQuestion, answerQuestion, skipQuestion } = useGameStore();
   const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 30);
-  
+
   // For different question types
   const [selectedAnswer, setSelectedAnswer] = useState<string | boolean | null>(null);
   const [essayAnswer, setEssayAnswer] = useState('');
@@ -41,7 +43,7 @@ const QuestionPopup = () => {
 
   const handleAnswer = useCallback(() => {
     if (!currentQuestion) return;
-    
+
     switch (currentQuestion.type) {
       case 'true_false':
         if (selectedAnswer === null) return;
@@ -92,21 +94,21 @@ const QuestionPopup = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-foreground/60 backdrop-blur-sm" />
-      
+
       {/* Modal */}
       <Card className="relative w-full max-w-lg animate-scale-in overflow-hidden">
         {/* Header with Timer */}
         <div className="bg-secondary/10 px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="font-bold">
+              <Badge className="font-bold">
                 {currentQuestion.category}
               </Badge>
               <span className="text-sm text-muted-foreground font-medium">
                 +{currentQuestion.points} poin
               </span>
             </div>
-            
+
             {/* Timer */}
             <div className="flex items-center gap-2">
               <Clock className={`w-5 h-5 ${timerColor}`} />
@@ -115,22 +117,22 @@ const QuestionPopup = () => {
               </span>
             </div>
           </div>
-          
+
           {/* Timer Bar */}
           <div className="mt-3 h-2 bg-muted rounded overflow-hidden">
-            <div 
+            <div
               className={`h-full transition-all duration-1000 ease-linear ${timerBgColor}`}
               style={{ width: `${timerPercentage}%` }}
             />
           </div>
         </div>
-        
+
         {/* Question Content */}
         <div className="p-6">
           <p className="text-lg font-semibold text-foreground leading-relaxed mb-6">
             {currentQuestion.question}
           </p>
-          
+
           {/* Answer Options based on type */}
           {currentQuestion.type === 'true_false' && (
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -138,8 +140,8 @@ const QuestionPopup = () => {
                 onClick={() => setSelectedAnswer(true)}
                 className={`
                   p-4 rounded-md border-2 font-bold text-lg transition-all duration-200
-                  ${selectedAnswer === true 
-                    ? 'border-success bg-success/10 text-success' 
+                  ${selectedAnswer === true
+                    ? 'border-success bg-success/10 text-success'
                     : 'border-border bg-card hover:border-success/50 text-foreground'
                   }
                 `}
@@ -150,8 +152,8 @@ const QuestionPopup = () => {
                 onClick={() => setSelectedAnswer(false)}
                 className={`
                   p-4 rounded-md border-2 font-bold text-lg transition-all duration-200
-                  ${selectedAnswer === false 
-                    ? 'border-destructive bg-destructive/10 text-destructive' 
+                  ${selectedAnswer === false
+                    ? 'border-destructive bg-destructive/10 text-destructive'
                     : 'border-border bg-card hover:border-destructive/50 text-foreground'
                   }
                 `}
@@ -160,7 +162,7 @@ const QuestionPopup = () => {
               </button>
             </div>
           )}
-          
+
           {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
             <div className="grid grid-cols-1 gap-3 mb-6">
               {['A', 'B', 'C', 'D'].map((option, index) => (
@@ -169,19 +171,19 @@ const QuestionPopup = () => {
                   onClick={() => setSelectedAnswer(option)}
                   className={`
                     p-3 rounded-md border-2 font-medium text-left transition-all duration-200
-                    ${selectedAnswer === option 
-                      ? 'border-primary bg-primary/10 text-primary' 
+                    ${selectedAnswer === option
+                      ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card hover:border-primary/50 text-foreground'
                     }
                   `}
                 >
-                  <span className="font-bold mr-2">{option}.</span>
-                  {currentQuestion.options?.[index]}
+                  <span className="font-bold mr-2">{option}. </span>
+                  {currentQuestion.options ? .[index]}
                 </button>
               ))}
             </div>
           )}
-          
+
           {currentQuestion.type === 'essay' && (
             <div className="mb-6">
               <Input
@@ -192,7 +194,7 @@ const QuestionPopup = () => {
               />
             </div>
           )}
-          
+
           {currentQuestion.type === 'matching' && currentQuestion.matchingPairs && (
             <div className="space-y-3 mb-6">
               {currentQuestion.matchingPairs.map((pair, index) => (
@@ -202,8 +204,8 @@ const QuestionPopup = () => {
                     {pair.left}
                   </div>
                   <span className="text-muted-foreground">→</span>
-                  <Select 
-                    value={matchingAnswers[String(index + 1)]} 
+                  <Select
+                    value={matchingAnswers[String(index + 1)]}
                     onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
                   >
                     <SelectTrigger className="w-24">
@@ -221,13 +223,13 @@ const QuestionPopup = () => {
                 Pilihan:
                 {currentQuestion.matchingPairs.map((pair, index) => (
                   <span key={index} className="ml-2">
-                    <strong>{['A', 'B', 'C'][index]}.</strong> {pair.right}
+                    <strong>{['A', 'B', 'C'][index]}. </strong> {pair.right}
                   </span>
                 ))}
               </div>
             </div>
           )}
-          
+
           {/* Action Buttons */}
           <div className="flex gap-3">
             <Button

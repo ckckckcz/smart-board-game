@@ -1,3 +1,5 @@
+'use client';
+
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGameStore } from '@/hooks/useGameStore';
@@ -30,13 +32,13 @@ const FeedbackBanner = () => {
             </p>
           </>
         )}
-        
+
         <Button
           onClick={nextQuestion}
           className={`
             mt-4 h-12 px-8 font-bold rounded-xl
-            ${lastAnswerCorrect 
-              ? 'bg-success-foreground/20 hover:bg-success-foreground/30 text-success-foreground' 
+            ${lastAnswerCorrect
+              ? 'bg-success-foreground/20 hover:bg-success-foreground/30 text-success-foreground'
               : 'bg-destructive-foreground/20 hover:bg-destructive-foreground/30 text-destructive-foreground'
             }
           `}

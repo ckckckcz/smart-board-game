@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (verifyAdminPin(pin)) {
       setPin('');
       setError('');
@@ -40,11 +41,11 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
         onClick={handleClose}
       />
-      
+
       {/* Modal */}
       <div className="relative w-full max-w-sm bg-card rounded-2xl shadow-2xl animate-scale-in">
         {/* Close Button */}
@@ -54,18 +55,18 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
         >
           <X className="w-5 h-5" />
         </button>
-        
+
         <form onSubmit={handleSubmit} className="p-6">
           {/* Icon */}
           <div className="w-16 h-16 rounded-full gradient-primary mx-auto mb-4 flex items-center justify-center">
             <Lock className="w-8 h-8 text-primary-foreground" />
           </div>
-          
+
           {/* Title */}
           <h2 className="text-xl font-bold text-center text-foreground mb-6">
             Masukkan PIN Admin
           </h2>
-          
+
           {/* PIN Input */}
           <div className="relative mb-4">
             <Input
@@ -87,14 +88,14 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
               {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          
+
           {/* Error Message */}
           {error && (
             <p className="text-sm text-destructive text-center mb-4 animate-shake">
               {error}
             </p>
           )}
-          
+
           {/* Buttons */}
           <div className="flex gap-3">
             <Button
