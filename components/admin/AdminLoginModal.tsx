@@ -85,7 +85,7 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
                 setError('');
               }}
               placeholder="Enter PIN"
-              className="h-14 text-center text-xl font-bold tracking-[0.5em] pr-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10 focus:bg-white/10 focus:border-indigo-500/50 transition-all duration-300 shadow-inner"
+              className="h-14 text-center text-xl font-bold tracking-wider pr-12 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10 focus:bg-white/10 focus:border-indigo-500/50 transition-all duration-300 shadow-inner"
               maxLength={10}
             />
             <button
