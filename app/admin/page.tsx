@@ -70,8 +70,8 @@ export default function AdminPanel() {
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md gradient-primary flex items-center justify-center">
-                                <GraduationCap className="w-5 h-5 text-primary-foreground" />
+                            <div className="w-10 h-10 rounded-md flex items-center justify-center">
+                                <GraduationCap className="w-5 h-5 text-black" />
                             </div>
                             <div>
                                 <h1 className="text-lg font-bold text-foreground">Panel Admin Guru</h1>

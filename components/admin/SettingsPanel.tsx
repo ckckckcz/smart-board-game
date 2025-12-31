@@ -51,8 +51,8 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-card rounded-md shadow-soft p-6">
-        <div className="w-12 h-12 rounded-md gradient-primary mx-auto mb-4 flex items-center justify-center">
-          <Key className="w-6 h-6 text-primary-foreground" />
+        <div className="w-12 h-12 rounded-md bg-black mx-auto mb-4 flex items-center justify-center">
+          <Key className="w-6 h-6 text-white" />
         </div>
 
         <h3 className="text-xl font-bold text-center text-foreground mb-6">
@@ -134,7 +134,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
         <div className="flex gap-3 mt-6">
           <Button
             onClick={handleChangePin}
-            className="flex-1 h-11 font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+            className="flex-1 h-11 font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
           >
             Ubah PIN
           </Button>

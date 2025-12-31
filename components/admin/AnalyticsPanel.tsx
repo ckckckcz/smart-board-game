@@ -40,43 +40,43 @@ const AnalyticsPanel = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
+        <div className="bg-white border border-gray-2 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
               <Users className="w-5 h-5 text-blue-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">{totalGames}</p>
+          <p className="text-2xl font-black text-black">{totalGames}</p>
           <p className="text-sm text-slate-400">Total Permainan</p>
         </div>
 
-        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
+        <div className="bg-white border border-gray-2 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
               <Target className="w-5 h-5 text-purple-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">{averageScore}</p>
+          <p className="text-2xl font-black text-black">{averageScore}</p>
           <p className="text-sm text-slate-400">Rata-rata Skor</p>
         </div>
 
-        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
+        <div className="bg-white border border-gray-2 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-yellow-600/20 flex items-center justify-center">
               <Trophy className="w-5 h-5 text-yellow-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">{highestScore}</p>
+          <p className="text-2xl font-black text-black">{highestScore}</p>
           <p className="text-sm text-slate-400">Skor Tertinggi</p>
         </div>
 
-        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
+        <div className="bg-white border border-gray-2 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-green-600/20 flex items-center justify-center">
               <Award className="w-5 h-5 text-green-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white truncate">{topPlayer?.name || '-'}</p>
+          <p className="text-2xl font-black text-black truncate">{topPlayer?.name || '-'}</p>
           <p className="text-sm text-slate-400">Pemain Terbaik</p>
         </div>
       </div>
@@ -85,7 +85,7 @@ const AnalyticsPanel = () => {
       <div className="bg-card rounded-2xl shadow-soft overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-accent" />
+            <Trophy className="w-5 h-5 text-primary" />
             Papan Peringkat
           </h3>
           {leaderboard.length > 0 && (

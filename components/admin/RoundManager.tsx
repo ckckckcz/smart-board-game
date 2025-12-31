@@ -45,12 +45,7 @@ const RoundManager = () => {
   return (
     <div className="space-y-6">
       {/* Add Round Form */}
-      <div className="bg-card rounded-md shadow-soft p-6">
-        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-          <Plus className="w-5 h-5 text-primary" />
-          Tambah Babak Baru
-        </h3>
-
+      <div className="bg-white border border-border rounded-lg shadow-soft p-6">
         {/* Round Name */}
         <div className="mb-4">
           <label className="text-sm font-semibold text-foreground mb-2 block">
@@ -82,17 +77,17 @@ const RoundManager = () => {
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] - 1)}
-                    className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-slate-300 hover:bg-slate-600 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-lg bg-white border border border-border flex items-center justify-center font-bold text-black hover:bg-white transition-colors cursor-pointer"
                   >
                     -
                   </button>
-                  <span className="flex-1 text-center font-bold text-foreground">
+                  <span className="flex-1 text-center font-bold text-black">
                     {questionCounts[category]}
                   </span>
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] + 1)}
-                    className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-slate-300 hover:bg-slate-600 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-lg bg-white border border border-border flex items-center justify-center font-bold text-black hover:bg-white transition-colors cursor-pointer"
                   >
                     +
                   </button>
@@ -110,9 +105,9 @@ const RoundManager = () => {
           <Button
             onClick={handleAddRound}
             disabled={!roundName.trim() || totalQuestions === 0}
-            className="h-11 px-6 font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-11 px-6 font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 mr-1" />
             Tambah Babak
           </Button>
         </div>
@@ -121,12 +116,12 @@ const RoundManager = () => {
       {/* Rounds List */}
       <div className="space-y-3">
         <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Layers className="w-5 h-5 text-secondary" />
+          <Layers className="w-5 h-5 text-black" />
           Daftar Babak ({rounds.length})
         </h3>
 
         {rounds.length === 0 ? (
-          <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground">
+          <div className="bg-white rounded-2xl p-8 text-center text-muted-foreground">
             Belum ada babak. Tambahkan babak pertama!
           </div>
         ) : (
@@ -134,7 +129,7 @@ const RoundManager = () => {
             {rounds.map((round) => (
               <div
                 key={round.id}
-                className="bg-card rounded-2xl shadow-soft p-4 flex items-start justify-between gap-4"
+                className="bg-white border border-border rounded-2xl shadow-soft p-4 flex items-start justify-between gap-4"
               >
                 <div className="flex-1">
                   <h4 className="font-bold text-foreground mb-1">{round.name}</h4>
@@ -146,7 +141,7 @@ const RoundManager = () => {
                       round.questionCounts[cat] > 0 && (
                         <span
                           key={cat}
-                          className="text-xs px-2 py-0.5 bg-secondary/10 text-secondary rounded-full font-medium"
+                          className="text-xs px-2 py-0.5 bg-black/10 text-gray-600 rounded-full font-medium"
                         >
                           {cat}: {round.questionCounts[cat]}
                         </span>
