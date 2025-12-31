@@ -35,9 +35,9 @@ export default function ResultsPage() {
             case 1:
                 return <Medal className="w-6 h-6 text-yellow-500" />;
             case 2:
-                return <Medal className="w-5 h-5 text-gray-400" />;
+                return <Medal className="w-5 h-5 text-slate-400" />;
             case 3:
-                return <Medal className="w-5 h-5 text-amber-600" />;
+                return <Medal className="w-5 h-5 text-orange-500" />;
             default:
                 return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-bold">{rank}</span>;
         }
@@ -125,7 +125,7 @@ export default function ResultsPage() {
                 <div className="flex gap-4">
                     <Button
                         onClick={handlePlayAgain}
-                        className="flex-1 h-14 text-lg font-bold rounded-xl gradient-success text-primary-foreground shadow-lg"
+                        className="flex-1 h-14 text-lg font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white shadow-lg cursor-pointer"
                     >
                         <RotateCcw className="w-5 h-5 mr-2" />
                         Main Lagi

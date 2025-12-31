@@ -76,7 +76,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
               <button
                 type="button"
                 onClick={() => setShowOldPin(!showOldPin)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 {showOldPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -99,7 +99,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
               <button
                 type="button"
                 onClick={() => setShowNewPin(!showNewPin)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 {showNewPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -122,7 +122,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPin(!showConfirmPin)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 {showConfirmPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -134,7 +134,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
         <div className="flex gap-3 mt-6">
           <Button
             onClick={handleChangePin}
-            className="flex-1 h-11 font-bold rounded-xl gradient-success text-primary-foreground"
+            className="flex-1 h-11 font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer"
           >
             Ubah PIN
           </Button>

@@ -51,7 +51,7 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-1 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-4 right-4 p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -83,7 +83,7 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
             <button
               type="button"
               onClick={() => setShowPin(!showPin)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -101,7 +101,7 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
             <Button
               type="submit"
               disabled={!pin}
-              className="flex-1 h-12 font-bold rounded-xl gradient-success text-primary-foreground"
+              className="flex-1 h-12 font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Masuk
             </Button>
@@ -109,7 +109,7 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
               type="button"
               onClick={handleClose}
               variant="outline"
-              className="h-12 px-6 font-bold rounded-xl border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              className="h-12 px-6 font-bold rounded-xl border-2 border-red-500 text-red-400 hover:bg-red-500 hover:text-white cursor-pointer"
             >
               Batal
             </Button>

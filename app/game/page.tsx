@@ -177,8 +177,8 @@ export default function GameBoard() {
                                             onClick={handleCoinClick}
                                             disabled={isSpinning}
                                             className={`
-                        w-28 h-28 rounded-full gradient-gold flex items-center justify-center shadow-lg cursor-pointer
-                        transition-transform duration-300
+                        w-28 h-28 rounded-full gradient-gold flex items-center justify-center shadow-lg
+                        transition-transform duration-300 cursor-pointer disabled:cursor-not-allowed
                         ${isSpinning ? 'animate-spin' : 'hover:scale-110'}
                       `}
                                             style={{

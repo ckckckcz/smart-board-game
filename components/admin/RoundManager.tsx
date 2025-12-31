@@ -82,7 +82,7 @@ const RoundManager = () => {
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] - 1)}
-                    className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center font-bold text-muted-foreground hover:bg-muted transition-colors"
+                    className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-slate-300 hover:bg-slate-600 transition-colors cursor-pointer"
                   >
                     -
                   </button>
@@ -92,7 +92,7 @@ const RoundManager = () => {
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] + 1)}
-                    className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center font-bold text-muted-foreground hover:bg-muted transition-colors"
+                    className="w-8 h-8 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-slate-300 hover:bg-slate-600 transition-colors cursor-pointer"
                   >
                     +
                   </button>
@@ -110,7 +110,7 @@ const RoundManager = () => {
           <Button
             onClick={handleAddRound}
             disabled={!roundName.trim() || totalQuestions === 0}
-            className="h-11 px-6 font-bold rounded-xl gradient-success text-primary-foreground"
+            className="h-11 px-6 font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4 mr-2" />
             Tambah Babak
@@ -158,7 +158,7 @@ const RoundManager = () => {
                   onClick={() => deleteRound(round.id)}
                   variant="ghost"
                   size="sm"
-                  className="text-destructive hover:bg-destructive/10"
+                  className="text-red-400 hover:bg-red-500/10 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

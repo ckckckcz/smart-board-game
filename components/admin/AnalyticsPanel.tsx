@@ -23,9 +23,9 @@ const AnalyticsPanel = () => {
       case 1:
         return <Medal className="w-5 h-5 text-yellow-500" />;
       case 2:
-        return <Medal className="w-4 h-4 text-gray-400" />;
+        return <Medal className="w-4 h-4 text-slate-400" />;
       case 3:
-        return <Medal className="w-4 h-4 text-amber-600" />;
+        return <Medal className="w-4 h-4 text-orange-500" />;
       default:
         return <span className="w-5 h-5 flex items-center justify-center text-xs font-bold text-muted-foreground">{rank}</span>;
     }
@@ -40,44 +40,44 @@ const AnalyticsPanel = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-card rounded-md shadow-soft p-5">
+        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-md bg-secondary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-secondary" />
+            <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-foreground">{totalGames}</p>
-          <p className="text-sm text-muted-foreground">Total Permainan</p>
+          <p className="text-2xl font-black text-white">{totalGames}</p>
+          <p className="text-sm text-slate-400">Total Permainan</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-soft p-5">
+        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Target className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
+              <Target className="w-5 h-5 text-purple-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-foreground">{averageScore}</p>
-          <p className="text-sm text-muted-foreground">Rata-rata Skor</p>
+          <p className="text-2xl font-black text-white">{averageScore}</p>
+          <p className="text-sm text-slate-400">Rata-rata Skor</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-soft p-5">
+        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-accent-foreground" />
+            <div className="w-10 h-10 rounded-lg bg-yellow-600/20 flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-yellow-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-foreground">{highestScore}</p>
-          <p className="text-sm text-muted-foreground">Skor Tertinggi</p>
+          <p className="text-2xl font-black text-white">{highestScore}</p>
+          <p className="text-sm text-slate-400">Skor Tertinggi</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-soft p-5">
+        <div className="bg-slate-800 rounded-xl shadow-soft p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
-              <Award className="w-5 h-5 text-success" />
+            <div className="w-10 h-10 rounded-lg bg-green-600/20 flex items-center justify-center">
+              <Award className="w-5 h-5 text-green-400" />
             </div>
           </div>
-          <p className="text-2xl font-black text-foreground truncate">{topPlayer?.name || '-'}</p>
-          <p className="text-sm text-muted-foreground">Pemain Terbaik</p>
+          <p className="text-2xl font-black text-white truncate">{topPlayer?.name || '-'}</p>
+          <p className="text-sm text-slate-400">Pemain Terbaik</p>
         </div>
       </div>
 
@@ -97,7 +97,7 @@ const AnalyticsPanel = () => {
               }}
               variant="ghost"
               size="sm"
-              className="text-destructive hover:bg-destructive/10"
+              className="text-red-400 hover:bg-red-500/10 cursor-pointer"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Hapus Semua

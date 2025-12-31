@@ -72,8 +72,8 @@ const QuestionPopup = () => {
   if (!currentQuestion) return null;
 
   const timerPercentage = (timeLeft / currentQuestion.timeLimit) * 100;
-  const timerColor = timeLeft <= 10 ? 'text-destructive' : timeLeft <= 20 ? 'text-warning' : 'text-success';
-  const timerBgColor = timeLeft <= 10 ? 'bg-destructive' : timeLeft <= 20 ? 'bg-warning' : 'bg-success';
+  const timerColor = timeLeft <= 10 ? 'text-red-500' : timeLeft <= 20 ? 'text-yellow-500' : 'text-green-500';
+  const timerBgColor = timeLeft <= 10 ? 'bg-red-500' : timeLeft <= 20 ? 'bg-yellow-500' : 'bg-green-500';
 
   const canAnswer = () => {
     switch (currentQuestion.type) {
@@ -139,10 +139,10 @@ const QuestionPopup = () => {
               <button
                 onClick={() => setSelectedAnswer(true)}
                 className={`
-                  p-4 rounded-md border-2 font-bold text-lg transition-all duration-200
+                  p-4 rounded-xl border-2 font-bold text-lg transition-all duration-200 cursor-pointer
                   ${selectedAnswer === true
-                    ? 'border-success bg-success/10 text-success'
-                    : 'border-border bg-card hover:border-success/50 text-foreground'
+                    ? 'border-green-500 bg-green-500/20 text-green-400'
+                    : 'border-slate-600 bg-slate-800 hover:border-green-500/50 text-white'
                   }
                 `}
               >
@@ -151,10 +151,10 @@ const QuestionPopup = () => {
               <button
                 onClick={() => setSelectedAnswer(false)}
                 className={`
-                  p-4 rounded-md border-2 font-bold text-lg transition-all duration-200
+                  p-4 rounded-xl border-2 font-bold text-lg transition-all duration-200 cursor-pointer
                   ${selectedAnswer === false
-                    ? 'border-destructive bg-destructive/10 text-destructive'
-                    : 'border-border bg-card hover:border-destructive/50 text-foreground'
+                    ? 'border-red-500 bg-red-500/20 text-red-400'
+                    : 'border-slate-600 bg-slate-800 hover:border-red-500/50 text-white'
                   }
                 `}
               >
@@ -170,15 +170,15 @@ const QuestionPopup = () => {
                   key={option}
                   onClick={() => setSelectedAnswer(option)}
                   className={`
-                    p-3 rounded-md border-2 font-medium text-left transition-all duration-200
+                    p-3 rounded-xl border-2 font-medium text-left transition-all duration-200 cursor-pointer
                     ${selectedAnswer === option
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card hover:border-primary/50 text-foreground'
+                      ? 'border-blue-500 bg-blue-500/20 text-blue-400'
+                      : 'border-slate-600 bg-slate-800 hover:border-blue-500/50 text-white'
                     }
                   `}
                 >
                   <span className="font-bold mr-2">{option}. </span>
-                  {currentQuestion.options ? .[index]}
+                  {currentQuestion.options?.[index]}
                 </button>
               ))}
             </div>
@@ -235,14 +235,14 @@ const QuestionPopup = () => {
             <Button
               onClick={handleAnswer}
               disabled={!canAnswer()}
-              className="flex-1 h-11 font-bold bg-primary hover:bg-primary/90"
+              className="flex-1 h-11 font-bold bg-blue-600 hover:bg-blue-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               JAWAB
             </Button>
             <Button
               onClick={handleSkip}
               variant="outline"
-              className="h-11 px-6 font-bold border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              className="h-11 px-6 font-bold border-2 border-red-500 text-red-400 hover:bg-red-500 hover:text-white cursor-pointer"
             >
               <SkipForward className="w-4 h-4 mr-2" />
               LEWATI

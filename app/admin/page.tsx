@@ -97,7 +97,7 @@ export default function AdminPanel() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all
+                  flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-all cursor-pointer
                   ${activeTab === tab.id
                                         ? 'bg-primary text-primary-foreground'
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
