@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState } from 'react';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
@@ -111,18 +111,21 @@ const QuestionBank = () => {
     resetForm();
   };
 
-  const getAnswerDisplay = (q: Question): string => {
+  // ✅ FIXED: Remove JSX type annotation, just return React. ReactNode
+  const renderAnswerDisplay = (q: Question) => {
     switch (q.type) {
       case 'essay':
-        return q.essayAnswer || '-';
+        return <span className="text-sm">{q.essayAnswer || '-'}</span>;
       case 'multiple_choice':
-        return String(q.correctAnswer) || '-';
+        return <span className="text-sm">{String(q.correctAnswer) || '-'}</span>;
       case 'true_false':
-        return q.correctAnswer ? 'Benar' : 'Salah';
+        return q.correctAnswer
+          ? <span className="text-sm font-semibold text-green-500">Benar</span>
+          : <span className="text-sm font-semibold text-red-500">Salah</span>;
       case 'matching':
-        return q.matchingAnswer || '-';
+        return <span className="text-sm">{q.matchingAnswer || '-'}</span>;
       default:
-        return '-';
+        return <span className="text-sm">-</span>;
     }
   };
 
@@ -132,7 +135,7 @@ const QuestionBank = () => {
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <BookOpen className="w-5 h-5 text-blue-500" />
+            <BookOpen className="w-5 h-5 text-black" />
             Bank Soal
           </CardTitle>
         </CardHeader>
@@ -140,7 +143,7 @@ const QuestionBank = () => {
           {/* Row 1: Category, Type, Time, Points */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label className="text-blue-400 font-semibold">Kategori:</Label>
+              <Label className="text-black font-semibold">Kategori: </Label>
               <Select value={category} onValueChange={(v) => setCategory(v as QuestionCategory)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -156,7 +159,7 @@ const QuestionBank = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-blue-400 font-semibold">Tipe Soal:</Label>
+              <Label className="text-black font-semibold">Tipe Soal:</Label>
               <Select value={type} onValueChange={(v) => { setType(v as QuestionType); resetForm(); }}>
                 <SelectTrigger>
                   <SelectValue />
@@ -172,7 +175,7 @@ const QuestionBank = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-blue-400 font-semibold">Waktu (menit):</Label>
+              <Label className="text-black font-semibold">Waktu (menit):</Label>
               <Input
                 type="number"
                 value={timeLimit}
@@ -183,7 +186,7 @@ const QuestionBank = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-blue-400 font-semibold">Poin:</Label>
+              <Label className="text-black font-semibold">Poin: </Label>
               <Input
                 type="number"
                 value={points}
@@ -196,7 +199,7 @@ const QuestionBank = () => {
 
           {/* Question Text */}
           <div className="space-y-2">
-            <Label className="text-amber-500 font-semibold">Pertanyaan:</Label>
+            <Label className="text-black font-semibold">Pertanyaan:</Label>
             <Textarea
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
@@ -208,7 +211,7 @@ const QuestionBank = () => {
           {/* Dynamic form based on type */}
           {type === 'essay' && (
             <div className="space-y-2">
-              <Label className="text-blue-400 font-semibold">Jawaban:</Label>
+              <Label className="text-black font-semibold">Jawaban: </Label>
               <Input
                 value={essayAnswer}
                 onChange={(e) => setEssayAnswer(e.target.value)}
@@ -221,7 +224,7 @@ const QuestionBank = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">Pilihan A:</Label>
+                  <Label className="text-black font-semibold">Pilihan A:</Label>
                   <Input
                     value={optionA}
                     onChange={(e) => setOptionA(e.target.value)}
@@ -229,7 +232,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">Pilihan B:</Label>
+                  <Label className="text-black font-semibold">Pilihan B:</Label>
                   <Input
                     value={optionB}
                     onChange={(e) => setOptionB(e.target.value)}
@@ -237,7 +240,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">Pilihan C:</Label>
+                  <Label className="text-black font-semibold">Pilihan C:</Label>
                   <Input
                     value={optionC}
                     onChange={(e) => setOptionC(e.target.value)}
@@ -245,7 +248,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">Pilihan D:</Label>
+                  <Label className="text-black font-semibold">Pilihan D:</Label>
                   <Input
                     value={optionD}
                     onChange={(e) => setOptionD(e.target.value)}
@@ -254,7 +257,7 @@ const QuestionBank = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-blue-400 font-semibold">Jawaban Benar:</Label>
+                <Label className="text-black font-semibold">Jawaban Benar: </Label>
                 <Select value={correctOption} onValueChange={setCorrectOption}>
                   <SelectTrigger>
                     <SelectValue placeholder="-- Pilih --" />
@@ -272,7 +275,7 @@ const QuestionBank = () => {
 
           {type === 'true_false' && (
             <div className="space-y-2">
-              <Label className="text-blue-400 font-semibold">Jawaban Benar:</Label>
+              <Label className="text-black font-semibold">Jawaban Benar: </Label>
               <Select value={trueFalseAnswer} onValueChange={setTrueFalseAnswer}>
                 <SelectTrigger>
                   <SelectValue placeholder="-- Pilih --" />
@@ -289,7 +292,7 @@ const QuestionBank = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">1. Kolom Kiri:</Label>
+                  <Label className="text-black font-semibold">1.  Kolom Kiri:</Label>
                   <Input
                     value={leftItem1}
                     onChange={(e) => setLeftItem1(e.target.value)}
@@ -297,7 +300,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">A. Kolom Kanan:</Label>
+                  <Label className="text-black font-semibold">A. Kolom Kanan:</Label>
                   <Input
                     value={rightItemA}
                     onChange={(e) => setRightItemA(e.target.value)}
@@ -305,7 +308,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">2. Kolom Kiri:</Label>
+                  <Label className="text-black font-semibold">2. Kolom Kiri:</Label>
                   <Input
                     value={leftItem2}
                     onChange={(e) => setLeftItem2(e.target.value)}
@@ -313,7 +316,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">B. Kolom Kanan:</Label>
+                  <Label className="text-black font-semibold">B.  Kolom Kanan:</Label>
                   <Input
                     value={rightItemB}
                     onChange={(e) => setRightItemB(e.target.value)}
@@ -321,7 +324,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">3. Kolom Kiri:</Label>
+                  <Label className="text-black font-semibold">3. Kolom Kiri:</Label>
                   <Input
                     value={leftItem3}
                     onChange={(e) => setLeftItem3(e.target.value)}
@@ -329,7 +332,7 @@ const QuestionBank = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-blue-400 font-semibold">C. Kolom Kanan:</Label>
+                  <Label className="text-black font-semibold">C. Kolom Kanan:</Label>
                   <Input
                     value={rightItemC}
                     onChange={(e) => setRightItemC(e.target.value)}
@@ -338,7 +341,7 @@ const QuestionBank = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-blue-400 font-semibold">Jawaban (format: 1A-2B-3C):</Label>
+                <Label className="text-black font-semibold">Jawaban (format:  1A-2B-3C):</Label>
                 <Input
                   value={matchingAnswer}
                   onChange={(e) => setMatchingAnswer(e.target.value)}
@@ -350,10 +353,10 @@ const QuestionBank = () => {
 
           <Button
             onClick={handleAddQuestion}
-            className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Plus className="w-4 h-4 mr-2" />
-            TAMBAH SOAL
+            Tambah Soal
           </Button>
         </CardContent>
       </Card>
@@ -362,14 +365,14 @@ const QuestionBank = () => {
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <BookOpen className="w-5 h-5 text-blue-500" />
+            <BookOpen className="w-5 h-5 text-black" />
             Daftar Soal ({allQuestions.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {allQuestions.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Belum ada soal. Tambahkan soal pertama!
+              Belum ada soal.  Tambahkan soal pertama!
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -402,7 +405,7 @@ const QuestionBank = () => {
                         <p className="truncate">{q.question}</p>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{getAnswerDisplay(q)}</span>
+                        {renderAnswerDisplay(q)}
                       </TableCell>
                       <TableCell className="text-center">
                         {Math.round(q.timeLimit / 60)}m
@@ -415,7 +418,7 @@ const QuestionBank = () => {
                           onClick={() => deleteQuestion(q.id)}
                           variant="ghost"
                           size="sm"
-                          className="text-red-400 hover:bg-red-500/10 cursor-pointer"
+                          className="text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

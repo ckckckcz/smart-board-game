@@ -174,10 +174,10 @@ export const CATEGORY_LABELS: Record<QuestionCategory, string> = {
 };
 
 export const CATEGORY_COLORS: Record<QuestionCategory, string> = {
-  C1: 'bg-game-blue',
-  C2: 'bg-game-purple',
+  C1: 'bg-blue-700',
+  C2: 'bg-purple-700',
   C3: 'bg-primary',
-  C4: 'bg-warning',
-  C5: 'bg-game-teal',
-  C6: 'bg-destructive',
+  C4: 'bg-yellow-700',
+  C5: 'bg-teal-700',
+  C6: 'bg-red-700',
 };

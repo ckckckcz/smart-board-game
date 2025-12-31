@@ -156,10 +156,10 @@ export default function GameBoard() {
                                             key={q.id}
                                             className={`
                         aspect-square rounded-md flex flex-col items-center justify-center text-xs font-bold transition-all duration-150
-                        ${answerResult === 'correct' ? 'bg-success text-success-foreground ring-2 ring-success' : ''}
-                        ${answerResult === 'wrong' ? 'bg-destructive text-destructive-foreground ring-2 ring-destructive' : ''}
-                        ${!answerResult && isHighlighted ? `${colorClass} text-primary-foreground ring-2 ring-offset-2 ring-foreground scale-110` : ''}
-                        ${!answerResult && !isHighlighted ? 'bg-muted text-muted-foreground' : ''}
+                        ${answerResult === 'correct' ? 'bg-green-600 text-white ring-2 ring-green-500' : ''}
+                        ${answerResult === 'wrong' ? 'bg-red-600 text-white ring-2 ring-red-500' : ''}
+                        ${!answerResult && isHighlighted ? `${colorClass} text-white ring-2 ring-offset-2 ring-white scale-110` : ''}
+                        ${!answerResult && !isHighlighted ? 'bg-slate-700 text-slate-300' : ''}
                       `}
                                         >
                                             <span>{q.category}</span>
