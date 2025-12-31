@@ -27,7 +27,7 @@ interface LightRaysProps {
     className?: string;
 }
 
-const DEFAULT_COLOR = "#000080";
+const DEFAULT_COLOR = "#4f46e5";
 
 const hexToRgb = (hex: string): [number, number, number] => {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -90,7 +90,7 @@ interface Uniforms {
 const LightRays: React.FC<LightRaysProps> = ({
     raysOrigin = "top-center",
     raysColor = DEFAULT_COLOR,
-    raysSpeed = 1,
+    raysSpeed = 0.4,
     lightSpread = 1,
     rayLength = 2,
     pulsating = false,
