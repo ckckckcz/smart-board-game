@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameStore } from '@/hooks/useGameStore';
-import DecorativeElements from '@/components/game/DecorativeElements';
+import DecorativeElements from '@/components/react-bits/background';
 
 export default function StartScreen() {
   const router = useRouter();
