@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Coins, User, X, CheckCircle, Trophy, BarChart3, Clock } from 'lucide-react';
+import { User, X, CheckCircle, Trophy, BarChart3, Clock } from 'lucide-react';
 import { useGameStore } from '@/hooks/useGameStore';
 import QuestionPopup from '@/components/game/QuestionPopup';
 import FeedbackBanner from '@/components/game/FeedbackBanner';
@@ -195,13 +195,10 @@ export default function GameBoard() {
 
 
                             {/* Question Tires Grid */}
-                            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4 mb-10">
+                            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-10">
                                 {questions.map((q, index) => {
                                     const answerResult = answeredQuestions[q.id];
                                     const isHighlighted = selectedQuestionIndex === index && isSpinning;
-                                    // Map categories to cleaner classes inside component if needed, 
-                                    // keeping it simple with dynamic inline or Tailwind utils for now.
-
                                     return (
                                         <div
                                             key={q.id}
@@ -259,7 +256,7 @@ export default function GameBoard() {
                                             </div>
 
                                             <div className="relative z-10 p-6 rounded-full bg-amber-600/20 backdrop-blur-sm border border-amber-300/30 shadow-inner">
-                                                <Coins className={`w-12 h-12 md:w-16 md:h-16 text-amber-100 drop-shadow-md ${isSpinning ? 'animate-bounce' : ''}`} />
+                                                <Trophy className={`w-12 h-12 md:w-16 md:h-16 text-amber-100 drop-shadow-md`} />
                                             </div>
                                         </button>
 

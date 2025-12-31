@@ -69,23 +69,9 @@ export default function StartScreen() {
         <div className="group relative bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-[1px]">
           {/* Animated border gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
           <div className="relative bg-black/40 rounded-[23px] p-6 md:p-8 space-y-6">
-
-            {/* Feature Pills */}
-            <div className="grid grid-cols-2 gap-3 mb-2">
-              <div className="bg-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-white/5 hover:bg-white/10 transition-colors">
-                <Trophy className="w-5 h-5 text-yellow-400 mb-1" />
-                <span className="text-xs font-semibold text-slate-300">Leaderboard</span>
-              </div>
-              <div className="bg-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center border border-white/5 hover:bg-white/10 transition-colors">
-                <Target className="w-5 h-5 text-emerald-400 mb-1" />
-                <span className="text-xs font-semibold text-slate-300">Tantangan</span>
-              </div>
-            </div>
-
             {/* Player Name Input */}
-            <div className="space-y-3">
+            <div className="space-y-3 ">
               <label className="text-sm font-bold text-slate-300 flex items-center gap-2 ml-1">
                 <User className="w-4 h-4 text-indigo-400" />
                 Identitas Pemain

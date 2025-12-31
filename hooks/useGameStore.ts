@@ -9,7 +9,7 @@ interface GameStore extends GameState {
   allQuestions: Question[];
   leaderboard: Player[];
   adminPin: string;
-  
+
   // Actions
   setPlayer: (name: string) => void;
   selectRound: (roundId: string) => void;
@@ -20,7 +20,7 @@ interface GameStore extends GameState {
   nextQuestion: () => void;
   endGame: () => void;
   resetGame: () => void;
-  
+
   // Admin actions
   verifyAdminPin: (pin: string) => boolean;
   updateAdminPin: (oldPin: string, newPin: string) => boolean;
@@ -45,13 +45,13 @@ export const useGameStore = create<GameStore>()(
       showFeedback: false,
       lastAnswerCorrect: null,
       gameComplete: false,
-      
+
       // Data stores
       rounds: mockRounds,
       allQuestions: mockQuestions,
       leaderboard: mockPlayers,
       adminPin: DEFAULT_ADMIN_PIN,
-      
+
       setPlayer: (name: string) => {
         set({
           player: {
@@ -64,7 +64,7 @@ export const useGameStore = create<GameStore>()(
           },
         });
       },
-      
+
       selectRound: (roundId: string) => {
         const { rounds, player } = get();
         const round = rounds.find(r => r.id === roundId);
@@ -75,25 +75,25 @@ export const useGameStore = create<GameStore>()(
           });
         }
       },
-      
+
       startGame: () => {
         const { currentRound, allQuestions } = get();
         if (!currentRound) return;
-        
+
         // Select questions based on round configuration
         const selectedQuestions: Question[] = [];
         const categories: QuestionCategory[] = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
-        
+
         categories.forEach(category => {
           const count = currentRound.questionCounts[category];
           const categoryQuestions = allQuestions.filter(q => q.category === category);
           const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
           selectedQuestions.push(...shuffled.slice(0, count));
         });
-        
+
         // Shuffle all selected questions for random order
         const shuffledQuestions = selectedQuestions.sort(() => Math.random() - 0.5);
-        
+
         set({
           questions: shuffledQuestions,
           answeredQuestions: {},
@@ -102,7 +102,7 @@ export const useGameStore = create<GameStore>()(
           gameComplete: false,
         });
       },
-      
+
       selectQuestion: (questionId: string) => {
         const { questions } = get();
         const question = questions.find(q => q.id === questionId);
@@ -110,13 +110,13 @@ export const useGameStore = create<GameStore>()(
           set({ currentQuestion: question });
         }
       },
-      
+
       answerQuestion: (answer: string | boolean) => {
         const { currentQuestion, player, answeredQuestions } = get();
         if (!currentQuestion || !player) return;
-        
+
         let isCorrect = false;
-        
+
         // Check answer based on question type
         switch (currentQuestion.type) {
           case 'true_false':
@@ -127,18 +127,18 @@ export const useGameStore = create<GameStore>()(
             break;
           case 'essay':
             // For essay, compare strings (case insensitive, trimmed)
-            isCorrect = String(answer).toLowerCase().trim() === 
-                       String(currentQuestion.essayAnswer || '').toLowerCase().trim();
+            isCorrect = String(answer).toLowerCase().trim() ===
+              String(currentQuestion.essayAnswer || '').toLowerCase().trim();
             break;
           case 'matching':
             // For matching, compare the answer string
-            isCorrect = String(answer).toUpperCase().replace(/\s/g, '') === 
-                       String(currentQuestion.matchingAnswer || '').toUpperCase().replace(/\s/g, '');
+            isCorrect = String(answer).toUpperCase().replace(/\s/g, '') ===
+              String(currentQuestion.matchingAnswer || '').toUpperCase().replace(/\s/g, '');
             break;
         }
-        
+
         const pointsEarned = isCorrect ? currentQuestion.points : 0;
-        
+
         set({
           showFeedback: true,
           lastAnswerCorrect: isCorrect,
@@ -154,15 +154,15 @@ export const useGameStore = create<GameStore>()(
           },
         });
       },
-      
+
       skipQuestion: () => {
         const { player, currentQuestion, answeredQuestions, currentQuestionIndex, questions } = get();
         if (!player) return;
-        
-        const newAnsweredQuestions = currentQuestion 
+
+        const newAnsweredQuestions = currentQuestion
           ? { ...answeredQuestions, [currentQuestion.id]: 'wrong' as const }
           : answeredQuestions;
-        
+
         set({
           player: {
             ...player,
@@ -175,42 +175,43 @@ export const useGameStore = create<GameStore>()(
         });
 
         // Check if game is complete
-        if (currentQuestionIndex >= questions.length - 1) {
+        const updatedAnsweredQuestions = get().answeredQuestions;
+        if (Object.keys(updatedAnsweredQuestions).length >= questions.length) {
           get().endGame();
         }
       },
-      
+
       nextQuestion: () => {
-        const { currentQuestionIndex, questions } = get();
-        
-        if (currentQuestionIndex >= questions.length - 1) {
+        const { questions, answeredQuestions } = get();
+
+        if (Object.keys(answeredQuestions).length >= questions.length) {
           get().endGame();
         } else {
-          set({
-            currentQuestionIndex: currentQuestionIndex + 1,
+          set((state) => ({
+            currentQuestionIndex: state.currentQuestionIndex + 1,
             currentQuestion: null,
             showFeedback: false,
             lastAnswerCorrect: null,
-          });
+          }));
         }
       },
-      
+
       endGame: () => {
         const { player, leaderboard } = get();
         if (!player) return;
-        
+
         const completedPlayer = {
           ...player,
           completedAt: new Date(),
         };
-        
+
         set({
           gameComplete: true,
           isPlaying: false,
           leaderboard: [...leaderboard, completedPlayer].sort((a, b) => b.score - a.score),
         });
       },
-      
+
       resetGame: () => {
         set({
           player: null,
@@ -225,11 +226,11 @@ export const useGameStore = create<GameStore>()(
           gameComplete: false,
         });
       },
-      
+
       verifyAdminPin: (pin: string) => {
         return get().adminPin === pin;
       },
-      
+
       updateAdminPin: (oldPin: string, newPin: string) => {
         if (get().adminPin === oldPin) {
           set({ adminPin: newPin });
@@ -237,23 +238,23 @@ export const useGameStore = create<GameStore>()(
         }
         return false;
       },
-      
+
       addRound: (round: Round) => {
         set({ rounds: [...get().rounds, round] });
       },
-      
+
       deleteRound: (roundId: string) => {
         set({ rounds: get().rounds.filter(r => r.id !== roundId) });
       },
-      
+
       addQuestion: (question: Question) => {
         set({ allQuestions: [...get().allQuestions, question] });
       },
-      
+
       deleteQuestion: (questionId: string) => {
         set({ allQuestions: get().allQuestions.filter(q => q.id !== questionId) });
       },
-      
+
       clearLeaderboard: () => {
         set({ leaderboard: [] });
       },
