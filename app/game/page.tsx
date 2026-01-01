@@ -94,7 +94,7 @@ export default function GameBoard() {
             <img src="/assets/bird-removebg-preview.png" alt="" className={styles.birdsRight} />
 
             {/* Header / StatusBar */}
-            <header className={styles.header} style={{ marginTop: '1rem', width: '95%', maxWidth: '1000px' }}>
+            <header className={styles.header} style={{ marginTop: '1rem', width: '95%', maxWidth: '800px' }}>
                 <div className={styles.playerBadge}>
                     <div style={{ background: '#0288d1', padding: '0.8rem', borderRadius: '15px', border: '3px solid var(--border)' }} className="border-border">
                         <User className="w-6 h-6 text-white" />
@@ -161,8 +161,8 @@ export default function GameBoard() {
                             >
                                 <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>{q.category}</div>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>#{index + 1}</div>
-                                {answerResult === 'correct' && <CheckCircle className="absolute w-20 h-20 opacity-40 text-white" />}
-                                {answerResult === 'wrong' && <X className="absolute w-20 h-20 opacity-40 text-white" />}
+                                {answerResult === 'correct' && <CheckCircle className="absolute w-12 h-12 opacity-40 text-white" />}
+                                {answerResult === 'wrong' && <X className="absolute w-12 h-12 opacity-40 text-white" />}
                             </div>
                         );
                     })}
@@ -176,9 +176,9 @@ export default function GameBoard() {
                                 onClick={handleCoinClick}
                                 disabled={isSpinning}
                                 className={styles.btn}
-                                style={{ width: '120px', height: '120px', borderRadius: '50%', fontSize: '1.5rem' }}
+                                style={{ width: '100px', height: '100px', borderRadius: '50%', fontSize: '1.5rem' }}
                             >
-                                <Trophy className="w-12 h-12" />
+                                <Trophy className="w-10 h-10" />
                             </button>
                             {showCoinPrompt && !isSpinning && (
                                 <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#01579b', animation: 'bounce 1s infinite' }}>
