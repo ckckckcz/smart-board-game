@@ -1,0 +1,255 @@
+/* Base Layout like landing page */
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #bbdefb;
+  background: linear-gradient(to bottom, #bbdefb 0%, #e3f2fd 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: "Arial Black", "Arial Bold", Gadget, sans-serif;
+}
+
+/* Background Layers */
+.bgCity {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.birds {
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 100px;
+  z-index: 5;
+}
+
+.birdsRight {
+  position: absolute;
+  top: 15%;
+  right: 15%;
+  width: 80px;
+  z-index: 5;
+  transform: scaleX(-1);
+}
+
+.street {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  z-index: 15;
+  object-fit: cover;
+}
+
+.bottomStrip {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 25px;
+  background: repeating-linear-gradient(-45deg, #ffc107, #ffc107 15px, #212121 15px, #212121 30px);
+  z-index: 20;
+}
+
+/* Glass Card */
+.glassCard {
+  position: relative;
+  z-index: 25;
+  width: 95%;
+  max-width: 1000px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 4px solid rgba(255, 255, 255, 0.7);
+  border-radius: 40px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  margin-top: 1rem;
+  margin-bottom: 120px; /* Space for street */
+}
+
+/* Common Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2rem;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 1rem 2rem;
+  border-radius: 30px;
+  border: 3px solid #000;
+}
+
+.playerBadge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.playerName {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #000;
+}
+
+.roundName {
+  font-size: 1rem;
+  color: #0288d1;
+}
+
+.statsRow {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+/* Buttons */
+.btn {
+  background: #0288d1;
+  background: linear-gradient(to bottom, #29b6f6 0%, #0288d1 100%);
+  color: white;
+  border: 4px solid #ffffff;
+  border-radius: 50px;
+  padding: 0.8rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #01579b;
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 40%;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 40px;
+  pointer-events: none;
+}
+
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+.btnSecondary {
+  background: #ff9800;
+  background: linear-gradient(to bottom, #ffb74d 0%, #f57c00 100%);
+  box-shadow: 0 5px 0 #e65100;
+}
+
+/* Grid for Game Board */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tile {
+  aspect-ratio: 1;
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.tile:hover {
+  transform: scale(1.05);
+}
+
+.tileCorrect {
+  background: #4caf50;
+  color: white;
+}
+
+.tileWrong {
+  background: #f44336;
+  color: white;
+}
+
+.tileActive {
+  background: #ffeb3b;
+  border-color: #fbc02d;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .statsRow {
+    width: 100%;
+    justify-content: space-around;
+  }
+  .tileGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .glassCard {
+    padding: 1rem;
+    margin-bottom: 80px;
+  }
+}

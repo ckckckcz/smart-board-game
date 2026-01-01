@@ -103,34 +103,34 @@ const QuestionPopup = () => {
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       {/* Dynamic Backdrop */}
-      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-white/60 backdrop-blur-md transition-opacity duration-300" />
 
       {/* Modal Card */}
       <div
         className={`
-            relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden
+            relative w-full max-w-2xl bg-white border border-border rounded-3xl shadow-2xl overflow-hidden
             transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
             ${isExiting ? 'scale-95 translate-y-4' : 'scale-100 translate-y-0'}
             animate-scale-in
         `}
       >
         {/* Decorative Top Glow */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-70" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 opacity-70" />
 
         {/* Header with Timer */}
-        <div className="bg-white/5 px-6 py-5 border-b border-white/5 flex items-center justify-between">
+        <div className="bg-slate-50 px-6 py-5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Badge className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border-0 px-3 py-1 text-sm font-bold uppercase tracking-wider">
+            <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-0 px-3 py-1 text-sm font-bold uppercase tracking-wider">
               {currentQuestion.category}
             </Badge>
-            <div className="flex items-center gap-1.5 text-slate-400 font-semibold text-sm">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>Points: <span className="text-white ml-1">{currentQuestion.points}</span></span>
+            <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Points: <span className="text-slate-900 ml-1">{currentQuestion.points}</span></span>
             </div>
           </div>
 
           {/* Timer Display */}
-          <div className="flex items-center gap-3 bg-black/40 px-4 py-1.5 rounded-full border border-white/5">
+          <div className="flex items-center gap-3 bg-white px-4 py-1.5 rounded-full border border-border shadow-sm">
             <Clock className={`w-4 h-4 ${timerColor} ${isUrgent ? 'animate-pulse' : ''}`} />
             <span className={`text-xl font-black tabular-nums tracking-wide ${timerColor}`}>
               {timeLeft}s
@@ -139,7 +139,7 @@ const QuestionPopup = () => {
         </div>
 
         {/* Timer Progress Bar (Slim) */}
-        <div className="h-1 w-full bg-slate-800">
+        <div className="h-1 w-full bg-slate-100">
           <div
             className={`h-full transition-all duration-1000 ease-linear ${timerBgColor} shadow-[0_0_10px_currentColor]`}
             style={{ width: `${timerPercentage}%` }}
@@ -155,15 +155,15 @@ const QuestionPopup = () => {
                 <img
                   src={currentQuestion.imageUrl}
                   alt="Question"
-                  className="w-full max-h-64 object-contain rounded-2xl border border-white/10 bg-black/20"
+                  className="w-full max-h-64 object-contain rounded-2xl border border-border bg-slate-50"
                 />
               </div>
             </div>
           )}
 
           {/* Question Text */}
-          <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/5 shadow-inner min-h-[80px] flex items-center justify-center text-center">
-            <p className="text-xl md:text-2xl font-bold text-white leading-relaxed">
+          <div className="mb-8 p-6 rounded-2xl bg-slate-50 border border-border shadow-inner min-h-[80px] flex items-center justify-center text-center">
+            <p className="text-xl md:text-2xl font-bold text-slate-900 leading-relaxed">
               {currentQuestion.question}
             </p>
           </div>
@@ -177,8 +177,8 @@ const QuestionPopup = () => {
                   className={`
                       group relative p-6 rounded-2xl border-2 font-black text-xl transition-all duration-200 cursor-pointer overflow-hidden
                       ${selectedAnswer === true
-                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
-                      : 'border-slate-700 bg-slate-800/50 hover:border-emerald-500/50 text-slate-400 hover:text-white hover:bg-slate-800'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
+                      : 'border-slate-200 bg-white hover:border-emerald-500 text-slate-400 hover:text-emerald-600'
                     }
                     `}
                 >
@@ -192,8 +192,8 @@ const QuestionPopup = () => {
                   className={`
                       group relative p-6 rounded-2xl border-2 font-black text-xl transition-all duration-200 cursor-pointer overflow-hidden
                       ${selectedAnswer === false
-                      ? 'border-rose-500 bg-rose-500/20 text-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
-                      : 'border-slate-700 bg-slate-800/50 hover:border-rose-500/50 text-slate-400 hover:text-white hover:bg-slate-800'
+                      ? 'border-rose-500 bg-rose-50 text-rose-600'
+                      : 'border-slate-200 bg-white hover:border-rose-500 text-slate-400 hover:text-rose-600'
                     }
                     `}
                 >
@@ -216,14 +216,14 @@ const QuestionPopup = () => {
                       className={`
                           relative p-4 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer flex items-start gap-4 hover:-translate-y-1
                           ${selectedAnswer === optionLabel
-                          ? 'border-indigo-500 bg-indigo-500/20 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
-                          : 'border-slate-700 bg-slate-800/50 hover:border-indigo-400/50 text-slate-300 hover:text-white hover:bg-slate-800'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-blue-400 text-slate-600 hover:text-blue-600'
                         }
                         `}
                     >
                       <div className={`
                           w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shrink-0 transition-colors
-                          ${selectedAnswer === optionLabel ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400 group-hover:bg-slate-600'}
+                          ${selectedAnswer === optionLabel ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}
                         `}>
                         {optionLabel}
                       </div>
@@ -236,12 +236,11 @@ const QuestionPopup = () => {
 
             {currentQuestion.type === 'essay' && (
               <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur duration-500" />
                 <Input
                   value={essayAnswer}
                   onChange={(e) => setEssayAnswer(e.target.value)}
                   placeholder="Ketik jawaban Anda di sini..."
-                  className="relative h-16 text-lg bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:ring-0 rounded-xl px-5"
+                  className="relative h-16 text-lg bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-5"
                 />
               </div>
             )}
@@ -249,14 +248,14 @@ const QuestionPopup = () => {
             {currentQuestion.type === 'matching' && currentQuestion.matchingPairs && (
               <div className="space-y-4">
                 {currentQuestion.matchingPairs.map((pair, index) => (
-                  <div key={index} className="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-white/5">
+                  <div key={index} className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-border">
                     <div className="flex-1 flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center font-bold text-slate-300 text-sm">
+                      <span className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center font-bold text-slate-600 text-sm">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-medium text-slate-200">{pair.left}</span>
+                      <span className="text-sm font-medium text-slate-700">{pair.left}</span>
                     </div>
-                    <span className="text-slate-600">
+                    <span className="text-slate-400">
                       <HelpCircle className="w-4 h-4" />
                     </span>
                     <div className="w-32">
@@ -264,10 +263,10 @@ const QuestionPopup = () => {
                         value={matchingAnswers[String(index + 1)]}
                         onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
                       >
-                        <SelectTrigger className="bg-slate-900 border-slate-700 text-white h-10">
+                        <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-10">
                           <SelectValue placeholder="Pilih..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                        <SelectContent className="bg-white border-slate-200 text-slate-900">
                           <SelectItem value="A">Pasangan A</SelectItem>
                           <SelectItem value="B">Pasangan B</SelectItem>
                           <SelectItem value="C">Pasangan C</SelectItem>
@@ -276,27 +275,16 @@ const QuestionPopup = () => {
                     </div>
                   </div>
                 ))}
-                <div className="mt-4 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                  <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Pilihan Jawaban</p>
-                  <div className="space-y-1">
-                    {currentQuestion.matchingPairs.map((pair, index) => (
-                      <div key={index} className="text-sm text-slate-300 flex gap-2">
-                        <span className="font-bold text-white min-w-[20px]">{['A', 'B', 'C'][index]}.</span>
-                        {pair.right}
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+          <div className="flex items-center gap-4 pt-4 border-t border-border">
             <Button
               onClick={handleSkip}
               variant="ghost"
-              className="h-12 px-6 font-bold text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer rounded-xl transition-colors"
+              className="h-12 px-6 font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer rounded-xl transition-colors"
             >
               <SkipForward className="w-4 h-4 mr-2" />
               LEWATI
@@ -306,7 +294,7 @@ const QuestionPopup = () => {
               disabled={!canAnswer()}
               className={`
                 flex-1 h-12 font-bold rounded-xl text-white shadow-lg cursor-pointer transition-all
-                ${!canAnswer() ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/25 hover:scale-[1.02]'}
+                ${!canAnswer() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 hover:shadow-blue-500/25 hover:scale-[1.02]'}
               `}
             >
               JAWAB SEKARANG

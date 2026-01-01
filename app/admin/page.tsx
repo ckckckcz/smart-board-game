@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, Layers, BookOpen, BarChart3, Settings, ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { GraduationCap, Layers, BookOpen, BarChart3, Settings, ArrowLeft } from 'lucide-react';
 import AdminLoginModal from '@/components/admin/AdminLoginModal';
 import RoundManager from '@/components/admin/RoundManager';
 import QuestionBank from '@/components/admin/QuestionBank';
 import AnalyticsPanel from '@/components/admin/AnalyticsPanel';
 import SettingsPanel from '@/components/admin/SettingsPanel';
 import { useInitializeGame } from '@/hooks/useInitializeGame';
+import styles from '../common.module.css';
 
 type AdminTab = 'rounds' | 'questions' | 'analytics' | 'settings';
 
@@ -21,10 +21,10 @@ export default function AdminPanel() {
     const [activeTab, setActiveTab] = useState<AdminTab>('rounds');
 
     const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
-        { id: 'rounds', label: 'Kelola Babak', icon: <Layers className="w-4 h-4" /> },
-        { id: 'questions', label: 'Bank Soal', icon: <BookOpen className="w-4 h-4" /> },
-        { id: 'analytics', label: 'Analitik', icon: <BarChart3 className="w-4 h-4" /> },
-        { id: 'settings', label: 'Pengaturan', icon: <Settings className="w-4 h-4" /> },
+        { id: 'rounds', label: 'Babak', icon: <Layers className="w-5 h-5" /> },
+        { id: 'questions', label: 'Soal', icon: <BookOpen className="w-5 h-5" /> },
+        { id: 'analytics', label: 'Data', icon: <BarChart3 className="w-5 h-5" /> },
+        { id: 'settings', label: 'Sistem', icon: <Settings className="w-5 h-5" /> },
     ];
 
     const handleLoginSuccess = () => {
@@ -39,108 +39,80 @@ export default function AdminPanel() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'rounds':
-                return <RoundManager />;
-            case 'questions':
-                return <QuestionBank />;
-            case 'analytics':
-                return <AnalyticsPanel />;
-            case 'settings':
-                return <SettingsPanel />;
-            default:
-                return null;
+            case 'rounds': return <RoundManager />;
+            case 'questions': return <QuestionBank />;
+            case 'analytics': return <AnalyticsPanel />;
+            case 'settings': return <SettingsPanel />;
+            default: return null;
         }
     };
 
-    // Show loading while initializing data
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mx-auto mb-4" />
-                    <p className="text-slate-400 text-lg">Memuat data...</p>
-                </div>
+            <div className={styles.container}>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0288d1' }}>LOADING...</div>
             </div>
         );
     }
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-                {/* Subtle Background Pattern */}
-                <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:24px_24px]" />
-                <AdminLoginModal
-                    isOpen={showLoginModal}
-                    onClose={handleCloseLogin}
-                    onSuccess={handleLoginSuccess}
-                />
+            <div className={styles.container}>
+                <img src="/assets/background-city-removebg-preview.png" alt="" className={styles.bgCity} />
+                <AdminLoginModal isOpen={showLoginModal} onClose={handleCloseLogin} onSuccess={handleLoginSuccess} />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200">
-            {/* Subtle Grid Background */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]"
-                style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }}
-            />
+        <div className={styles.container}>
+            <img src="/assets/background-city-removebg-preview.png" alt="" className={styles.bgCity} />
 
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-white/5 shadow-lg">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                <GraduationCap className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold text-white tracking-tight">Admin Dashboard</h1>
-                                <p className="text-xs font-medium text-indigo-400">Smart Shoot Board Game</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => router.push('/')}
-                                className="hidden md:flex text-slate-400 hover:text-white hover:bg-white/5"
-                            >
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Ke Game
-                            </Button>
-                        </div>
+            <header className={styles.header} style={{ marginTop: '1rem', width: '95%', maxWidth: '1200px' }}>
+                <div className={styles.playerBadge}>
+                    <div style={{ background: '#0288d1', padding: '0.8rem', borderRadius: '15px', border: '3px solid var(--border)' }} className="border-border">
+                        <GraduationCap className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <div className={styles.playerName}>PANEL GURU</div>
+                        <div className={styles.roundName}>Smart Shoot Admin</div>
                     </div>
                 </div>
+
+                <button onClick={() => router.push('/')} className={styles.btn} style={{ padding: '0.5rem 1.5rem', fontSize: '1rem' }}>
+                    <ArrowLeft className="w-5 h-5 mr-2" /> KE GAME
+                </button>
             </header>
 
-            {/* Tab Navigation */}
-            <div className="sticky top-[73px] z-30 bg-slate-950/90 backdrop-blur-md border-b border-white/5 py-4">
-                <div className="container mx-auto px-4">
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`
-                                    relative flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all duration-300
-                                    ${activeTab === tab.id
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 ring-1 ring-indigo-400/50'
-                                        : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-                                    }
-                                `}
-                            >
-                                {tab.icon}
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+            <main className={styles.glassCard} style={{ marginTop: '0.5rem', maxWidth: '1200px' }}>
+                {/* Tabs */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`${styles.btn} border border-border`}
+                            style={{
+                                flex: 1,
+                                minWidth: '120px',
+                                background: activeTab === tab.id ? '' : '#fff',
+                                color: activeTab === tab.id ? '' : '#1e293b',
+                                border: '3px solid var(--border)',
+                                boxShadow: activeTab === tab.id ? '0 5px 0 #01579b' : '0 5px 0 #ccc'
+                            }}
+                        >
+                            {tab.icon} {tab.label}
+                        </button>
+                    ))}
                 </div>
-            </div>
 
-            {/* Content Area */}
-            <main className="container mx-auto px-4 py-8 relative z-10 animate-fade-in">
-                {renderContent()}
+                <div style={{ background: '#fff', borderRadius: '20px', padding: '1.5rem', border: '3px solid var(--border)' }} className="border-border">
+                    {renderContent()}
+                </div>
             </main>
+
+            <img src="/assets/streets-removebg-preview.png" alt="" className={styles.street} />
+            <div className={styles.bottomStrip} />
         </div>
     );
 }

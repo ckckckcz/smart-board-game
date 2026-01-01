@@ -13,11 +13,11 @@ const FeedbackBanner = () => {
     <div className={`
       relative w-full max-w-md mx-auto p-1 rounded-3xl shadow-2xl overflow-hidden
       ${lastAnswerCorrect
-        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30'
-        : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/30'}
+        ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-emerald-500/20'
+        : 'bg-gradient-to-br from-rose-500 to-rose-600 shadow-rose-500/20'}
       animate-scale-in
     `}>
-      <div className="bg-black/10 backdrop-blur-sm rounded-[22px] p-8">
+      <div className="bg-white/10 backdrop-blur-sm rounded-[22px] p-8">
         <div className="flex flex-col items-center text-center">
 
           {/* Animated Icon Container */}
@@ -36,7 +36,7 @@ const FeedbackBanner = () => {
             {lastAnswerCorrect ? 'LUAR BIASA!' : 'OOPS!'}
           </h3>
 
-          <div className="px-4 py-1.5 rounded-full bg-black/20 text-white/90 font-bold text-sm mb-6 border border-white/10">
+          <div className="px-4 py-1.5 rounded-full bg-black/10 text-white/90 font-bold text-sm mb-6 border border-white/10">
             {lastAnswerCorrect
               ? `+${currentQuestion?.points || 100} Poin Ditambahkan`
               : 'Jangan menyerah, coba lagi!'}
@@ -44,7 +44,7 @@ const FeedbackBanner = () => {
 
           <Button
             onClick={nextQuestion}
-            className="w-full h-14 font-bold rounded-2xl cursor-pointer bg-white text-slate-900 hover:bg-slate-100 hover:scale-[1.02] shadow-xl transition-all group"
+            className="w-full h-14 font-bold rounded-2xl cursor-pointer bg-white text-slate-900 hover:bg-slate-50 hover:scale-[1.02] shadow-xl transition-all group"
           >
             LANJUT KE SOAL BERIKUTNYA
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

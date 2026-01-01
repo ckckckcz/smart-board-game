@@ -51,55 +51,55 @@ const AnalyticsPanel = () => {
     <div className="space-y-6 animate-scale-in">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-5 hover:bg-slate-800/50 transition-colors group">
+        <div className="bg-white border border-border rounded-2xl p-5 hover:bg-slate-50 transition-colors group shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Users className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Users className="w-5 h-5 text-blue-500" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">{totalGames}</p>
+          <p className="text-2xl font-black text-slate-900">{totalGames}</p>
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Permainan</p>
         </div>
 
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-5 hover:bg-slate-800/50 transition-colors group">
+        <div className="bg-white border border-border rounded-2xl p-5 hover:bg-slate-50 transition-colors group shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Target className="w-5 h-5 text-purple-400" />
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Target className="w-5 h-5 text-purple-500" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">{averageScore}</p>
+          <p className="text-2xl font-black text-slate-900">{averageScore}</p>
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Rata-rata Skor</p>
         </div>
 
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-5 hover:bg-slate-800/50 transition-colors group">
+        <div className="bg-white border border-border rounded-2xl p-5 hover:bg-slate-50 transition-colors group shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Trophy className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Trophy className="w-5 h-5 text-amber-500" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">{highestScore}</p>
+          <p className="text-2xl font-black text-slate-900">{highestScore}</p>
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Skor Tertinggi</p>
         </div>
 
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-5 hover:bg-slate-800/50 transition-colors group">
+        <div className="bg-white border border-border rounded-2xl p-5 hover:bg-slate-50 transition-colors group shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Award className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Award className="w-5 h-5 text-emerald-500" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white truncate">{topPlayer?.name || '-'}</p>
+          <p className="text-2xl font-black text-slate-900 truncate">{topPlayer?.name || '-'}</p>
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pemain Terbaik</p>
         </div>
       </div>
 
       {/* Leaderboard */}
-      <div className="bg-slate-900/50 border border-white/10 rounded-3xl overflow-hidden shadow-xl">
-        <div className="px-6 py-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-400" />
+      <div className="bg-white border border-border rounded-3xl overflow-hidden shadow-sm">
+        <div className="px-6 py-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-amber-500" />
             Papan Peringkat
             {selectedRound !== 'all' && (
-              <span className="text-sm font-normal text-slate-400">
+              <span className="text-sm font-normal text-slate-500">
                 ({sortedLeaderboard.length} pemain)
               </span>
             )}
@@ -110,10 +110,10 @@ const AnalyticsPanel = () => {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-slate-400" />
               <Select value={selectedRound} onValueChange={setSelectedRound}>
-                <SelectTrigger className="w-[200px] bg-slate-800 border-white/10 text-white h-9">
+                <SelectTrigger className="w-[200px] bg-white border border-border text-slate-900 h-9">
                   <SelectValue placeholder="Filter Babak" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-white/10 text-white">
+                <SelectContent className="bg-white border border-border text-slate-900">
                   <SelectItem value="all">Semua Babak</SelectItem>
                   {rounds.map((round) => (
                     <SelectItem key={round.id} value={round.id}>
@@ -133,7 +133,7 @@ const AnalyticsPanel = () => {
                 }}
                 variant="ghost"
                 size="sm"
-                className="text-rose-400 hover:text-white hover:bg-rose-500/20 cursor-pointer"
+                className="text-rose-500 hover:bg-rose-50 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Hapus Semua
@@ -143,31 +143,31 @@ const AnalyticsPanel = () => {
         </div>
 
         {sortedLeaderboard.length === 0 ? (
-          <div className="px-6 py-12 text-center text-slate-500">
+          <div className="px-6 py-12 text-center text-slate-400">
             {selectedRound === 'all'
               ? 'Belum ada data permainan.'
               : 'Belum ada data permainan untuk babak ini.'}
           </div>
         ) : (
-          <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
+          <div className="divide-y divide-border max-h-[500px] overflow-y-auto">
             {sortedLeaderboard.map((player, index) => (
               <div
                 key={player.id}
-                className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
+                className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex-shrink-0 w-8 flex justify-center">
                   {getMedalIcon(index + 1)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-200 truncate">{player.name}</p>
+                  <p className="font-bold text-slate-900 truncate">{player.name}</p>
                   <p className="text-xs text-slate-500 truncate">{getRoundName(player.roundId)}</p>
                 </div>
                 <div className="flex items-center gap-4 text-sm hidden sm:flex">
-                  <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded">✓ {player.correctAnswers}</span>
-                  <span className="text-rose-400 font-medium bg-rose-500/10 px-2 py-0.5 rounded">✗ {player.wrongAnswers}</span>
+                  <span className="text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">✓ {player.correctAnswers}</span>
+                  <span className="text-rose-600 font-medium bg-rose-50 px-2 py-0.5 rounded border border-rose-100">✗ {player.wrongAnswers}</span>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-white">{player.score}</p>
+                  <p className="font-bold text-slate-900">{player.score}</p>
                   <p className="text-[10px] text-slate-500 uppercase font-bold">poin</p>
                 </div>
               </div>
@@ -177,9 +177,9 @@ const AnalyticsPanel = () => {
 
         {/* Footer showing total count */}
         {sortedLeaderboard.length > 0 && (
-          <div className="px-6 py-3 bg-black/20 border-t border-white/5 text-center">
-            <p className="text-xs text-slate-400">
-              Menampilkan <span className="text-white font-bold">{sortedLeaderboard.length}</span> pemain
+          <div className="px-6 py-3 bg-slate-50 border-t border-border text-center">
+            <p className="text-xs text-slate-500">
+              Menampilkan <span className="text-slate-900 font-bold">{sortedLeaderboard.length}</span> pemain
               {selectedRound !== 'all' && ` di ${getRoundName(selectedRound)}`}
             </p>
           </div>

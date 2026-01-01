@@ -179,11 +179,11 @@ const QuestionBank = () => {
   return (
     <div className="space-y-8 animate-scale-in">
       {/* Add Question Form */}
-      <div className="bg-slate-900/50 border border-white/10 rounded-3xl shadow-xl overflow-hidden">
-        <div className="p-6 md:p-8 bg-white/5 border-b border-white/5">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-indigo-400" />
+      <div className="bg-white border border-border rounded-3xl shadow-sm overflow-hidden">
+        <div className="p-6 md:p-8 bg-slate-50 border-b border-border">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-blue-600" />
             </span>
             Tambah Soal Baru
           </h3>
@@ -193,12 +193,12 @@ const QuestionBank = () => {
           {/* Row 1: Category, Type, Time, Points */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Kategori</Label>
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as QuestionCategory)}>
-                <SelectTrigger className="bg-slate-800 border-white/10 text-white h-11">
+                <SelectTrigger className="bg-white border border-slate-200 text-slate-900 h-11">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-white/10 text-white">
+                <SelectContent className="bg-white border border-slate-200 text-slate-900">
                   {(Object.keys(SIMPLE_CATEGORY_LABELS) as QuestionCategory[]).map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {SIMPLE_CATEGORY_LABELS[cat]}
@@ -209,12 +209,12 @@ const QuestionBank = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Tipe Soal</Label>
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipe Soal</Label>
               <Select value={type} onValueChange={(v) => { setType(v as QuestionType); resetForm(); }}>
-                <SelectTrigger className="bg-slate-800 border-white/10 text-white h-11">
+                <SelectTrigger className="bg-white border border-slate-200 text-slate-900 h-11">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-white/10 text-white">
+                <SelectContent className="bg-white border border-slate-200 text-slate-900">
                   {(Object.keys(TYPE_LABELS) as QuestionType[]).map((t) => (
                     <SelectItem key={t} value={t}>
                       {TYPE_LABELS[t]}
@@ -225,31 +225,31 @@ const QuestionBank = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Waktu (menit)</Label>
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Waktu (menit)</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   type="number"
                   value={timeLimit}
                   onChange={(e) => setTimeLimit(Number(e.target.value))}
                   min={1}
                   max={30}
-                  className="pl-9 bg-slate-800 border-white/10 text-white h-11"
+                  className="pl-9 bg-white border border-slate-200 text-slate-900 h-11"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Poin</Label>
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Poin</Label>
               <div className="relative">
-                <AlertCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <AlertCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   type="number"
                   value={points}
                   onChange={(e) => setPoints(Number(e.target.value))}
                   min={10}
                   step={10}
-                  className="pl-9 bg-slate-800 border-white/10 text-white h-11"
+                  className="pl-9 bg-white border border-slate-200 text-slate-900 h-11"
                 />
               </div>
             </div>
@@ -257,18 +257,18 @@ const QuestionBank = () => {
 
           {/* Question Text */}
           <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Pertanyaan</Label>
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pertanyaan</Label>
             <Textarea
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
               placeholder="Tulis pertanyaan di sini..."
-              className="min-h-[100px] resize-none bg-slate-800 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 text-lg"
+              className="min-h-[100px] resize-none bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 text-lg"
             />
           </div>
 
           {/* Image Upload Section */}
           <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
               <Image className="w-4 h-4" />
               Gambar Soal
             </Label>
@@ -276,7 +276,7 @@ const QuestionBank = () => {
             {!imagePreview ? (
               /* Dropzone Style Upload */
               <div
-                className="w-full border-2 border-dashed border-slate-600 rounded-2xl bg-slate-800/50 hover:bg-slate-800 hover:border-slate-500 transition-all cursor-pointer"
+                className="w-full border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input
@@ -306,8 +306,8 @@ const QuestionBank = () => {
                   </div>
 
                   {/* Text */}
-                  <p className="text-slate-400 text-sm mb-1">Click the button below to upload</p>
-                  <p className="text-slate-500 text-xs mb-4">Max. File Size: 30MB</p>
+                  <p className="text-slate-500 text-sm mb-1">Klik untuk unggah gambar</p>
+                  <p className="text-slate-400 text-xs mb-4">Maks. Ukuran: 30MB</p>
 
                   {/* Browse Button */}
                   <Button
@@ -316,29 +316,26 @@ const QuestionBank = () => {
                       e.stopPropagation();
                       fileInputRef.current?.click();
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-2 rounded-full cursor-pointer"
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-full cursor-pointer"
                   >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    Browse file
+                    Pilih File
                   </Button>
                 </div>
               </div>
             ) : (
               /* Image Preview */
-              <div className="w-full border-2 border-dashed border-slate-600 rounded-2xl bg-slate-800/50 p-4">
+              <div className="w-full border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 p-4">
                 <div className="relative w-full flex flex-col items-center">
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-full max-h-64 object-contain rounded-xl border border-white/10 bg-black/20"
+                    className="w-full max-h-64 object-contain rounded-xl border border-border bg-white"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={clearImage}
-                    className="mt-4 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer"
+                    className="mt-4 text-rose-500 hover:bg-rose-50 cursor-pointer"
                   >
                     <X className="w-4 h-4 mr-2" />
                     Hapus Gambar
@@ -348,18 +345,18 @@ const QuestionBank = () => {
             )}
           </div>
 
-          <div className="h-px bg-white/5 my-4" />
+          <div className="h-px bg-slate-100 my-4" />
 
           {/* Dynamic form based on type */}
-          <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+          <div className="bg-slate-50 rounded-2xl p-6 border border-border">
             {type === 'essay' && (
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Kunci Jawaban</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kunci Jawaban</Label>
                 <Input
                   value={essayAnswer}
                   onChange={(e) => setEssayAnswer(e.target.value)}
                   placeholder="Jawaban essay..."
-                  className="bg-slate-800 border-white/10 text-white h-11"
+                  className="bg-white border border-slate-200 text-slate-900 h-11"
                 />
               </div>
             )}
@@ -369,8 +366,8 @@ const QuestionBank = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                   {['A', 'B', 'C', 'D', 'E'].map((opt, idx) => (
                     <div key={opt} className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                        Pilihan {opt} {idx < 5 ? <span className="text-rose-400">*</span> : <span className="text-slate-500">(opsional)</span>}
+                      <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Pilihan {opt} {idx < 5 ? <span className="text-rose-500">*</span> : <span className="text-slate-400">(opsional)</span>}
                       </Label>
                       <Input
                         value={idx === 0 ? optionA : idx === 1 ? optionB : idx === 2 ? optionC : idx === 3 ? optionD : optionE}
@@ -382,18 +379,18 @@ const QuestionBank = () => {
                           if (idx === 4) setOptionE(e.target.value);
                         }}
                         placeholder={`Pilihan ${opt}`}
-                        className="bg-slate-800 border-white/10 text-white h-11"
+                        className="bg-white border border-slate-200 text-slate-900 h-11"
                       />
                     </div>
                   ))}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Jawaban Benar</Label>
+                  <Label className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Jawaban Benar</Label>
                   <Select value={correctOption} onValueChange={setCorrectOption}>
-                    <SelectTrigger className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 h-11 font-bold">
+                    <SelectTrigger className="bg-emerald-50 border border-emerald-200 text-emerald-700 h-11 font-bold">
                       <SelectValue placeholder="-- Pilih Jawaban Benar --" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-white/10 text-white">
+                    <SelectContent className="bg-white border border-slate-200 text-slate-900">
                       <SelectItem value="A">A</SelectItem>
                       <SelectItem value="B">B</SelectItem>
                       <SelectItem value="C">C</SelectItem>
@@ -407,12 +404,12 @@ const QuestionBank = () => {
 
             {type === 'true_false' && (
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Jawaban Benar</Label>
+                <Label className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Jawaban Benar</Label>
                 <Select value={trueFalseAnswer} onValueChange={setTrueFalseAnswer}>
-                  <SelectTrigger className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 h-11 font-bold">
+                  <SelectTrigger className="bg-emerald-50 border border-emerald-200 text-emerald-700 h-11 font-bold">
                     <SelectValue placeholder="-- Pilih Benar/Salah --" />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-white/10 text-white">
+                  <SelectContent className="bg-white border border-slate-200 text-slate-900">
                     <SelectItem value="true">Benar</SelectItem>
                     <SelectItem value="false">Salah</SelectItem>
                   </SelectContent>
@@ -425,41 +422,41 @@ const QuestionBank = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                   {/* Pair 1 */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-300">1. Kiri</Label>
-                    <Input value={leftItem1} onChange={(e) => setLeftItem1(e.target.value)} placeholder="Item 1" className="bg-slate-800 border-white/10 text-white" />
+                    <Label className="text-xs font-bold text-slate-500">1. Kiri</Label>
+                    <Input value={leftItem1} onChange={(e) => setLeftItem1(e.target.value)} placeholder="Item 1" className="bg-white border border-slate-200 text-slate-900" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-300">A. Kanan</Label>
-                    <Input value={rightItemA} onChange={(e) => setRightItemA(e.target.value)} placeholder="Pasangan A" className="bg-slate-800 border-white/10 text-white" />
+                    <Label className="text-xs font-bold text-slate-500">A. Kanan</Label>
+                    <Input value={rightItemA} onChange={(e) => setRightItemA(e.target.value)} placeholder="Pasangan A" className="bg-white border border-slate-200 text-slate-900" />
                   </div>
 
                   {/* Pair 2 */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-300">2. Kiri</Label>
-                    <Input value={leftItem2} onChange={(e) => setLeftItem2(e.target.value)} placeholder="Item 2" className="bg-slate-800 border-white/10 text-white" />
+                    <Label className="text-xs font-bold text-slate-500">2. Kiri</Label>
+                    <Input value={leftItem2} onChange={(e) => setLeftItem2(e.target.value)} placeholder="Item 2" className="bg-white border border-slate-200 text-slate-900" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-300">B. Kanan</Label>
-                    <Input value={rightItemB} onChange={(e) => setRightItemB(e.target.value)} placeholder="Pasangan B" className="bg-slate-800 border-white/10 text-white" />
+                    <Label className="text-xs font-bold text-slate-500">B. Kanan</Label>
+                    <Input value={rightItemB} onChange={(e) => setRightItemB(e.target.value)} placeholder="Pasangan B" className="bg-white border border-slate-200 text-slate-900" />
                   </div>
 
                   {/* Pair 3 */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-300">3. Kiri</Label>
-                    <Input value={leftItem3} onChange={(e) => setLeftItem3(e.target.value)} placeholder="Item 3" className="bg-slate-800 border-white/10 text-white" />
+                    <Label className="text-xs font-bold text-slate-500">3. Kiri</Label>
+                    <Input value={leftItem3} onChange={(e) => setLeftItem3(e.target.value)} placeholder="Item 3" className="bg-white border border-slate-200 text-slate-900" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-300">C. Kanan</Label>
-                    <Input value={rightItemC} onChange={(e) => setRightItemC(e.target.value)} placeholder="Pasangan C" className="bg-slate-800 border-white/10 text-white" />
+                    <Label className="text-xs font-bold text-slate-500">C. Kanan</Label>
+                    <Input value={rightItemC} onChange={(e) => setRightItemC(e.target.value)} placeholder="Pasangan C" className="bg-white border border-slate-200 text-slate-900" />
                   </div>
                 </div>
-                <div className="space-y-2 bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                  <Label className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Kunci Jawaban (Format: 1A-2B-3C)</Label>
+                <div className="space-y-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                  <Label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Kunci Jawaban (Format: 1A-2B-3C)</Label>
                   <Input
                     value={matchingAnswer}
                     onChange={(e) => setMatchingAnswer(e.target.value)}
                     placeholder="1A-2B-3C"
-                    className="bg-slate-800 border-white/10 text-white font-mono h-11"
+                    className="bg-white border border-slate-200 text-slate-900 font-mono h-11"
                   />
                 </div>
               </div>
@@ -468,7 +465,7 @@ const QuestionBank = () => {
 
           <Button
             onClick={handleAddQuestion}
-            className="w-full h-12 font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg cursor-pointer transition-all hover:scale-[1.01]"
+            className="w-full h-12 font-bold rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md cursor-pointer transition-all hover:scale-[1.01]"
           >
             <Plus className="w-5 h-5 mr-2" />
             Simpan Soal ke Bank Data
@@ -477,42 +474,42 @@ const QuestionBank = () => {
       </div>
 
       {/* Questions List */}
-      <div className="bg-slate-900/50 border border-white/10 rounded-3xl shadow-xl overflow-hidden">
-        <div className="p-6 border-b border-white/10 flex items-center gap-2 bg-white/5">
-          <BookOpen className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-lg font-bold text-white">Daftar Soal ({allQuestions.length})</h3>
+      <div className="bg-white border border-border rounded-3xl shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-border flex items-center gap-2 bg-slate-50">
+          <BookOpen className="w-5 h-5 text-blue-500" />
+          <h3 className="text-lg font-bold text-slate-900">Daftar Soal ({allQuestions.length})</h3>
         </div>
 
         <div className="p-0">
           {allQuestions.length === 0 ? (
-            <p className="text-center text-slate-500 py-12">
+            <p className="text-center text-slate-400 py-12">
               Belum ada soal. Tambahkan soal pertama!
             </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-black/20 border-white/10">
-                  <TableRow className="border-white/10 hover:bg-transparent">
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Kategori</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Tipe</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Gambar</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider max-w-[200px]">Pertanyaan</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Jawaban</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider text-center">Waktu</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider text-center">Poin</TableHead>
-                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider text-center">Aksi</TableHead>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Kategori</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Tipe</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Gambar</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider max-w-[200px]">Pertanyaan</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Jawaban</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider text-center">Waktu</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider text-center">Poin</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allQuestions.map((q) => (
-                    <TableRow key={q.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableRow key={q.id} className="border-border hover:bg-slate-50 transition-colors">
                       <TableCell>
                         <Badge className={`${CATEGORY_COLORS[q.category]} text-white border-0`}>
                           {q.category}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-white/5 text-slate-300 border-white/10">
+                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border border-border">
                           {TYPE_LABELS[q.type]}
                         </Badge>
                       </TableCell>
@@ -521,22 +518,22 @@ const QuestionBank = () => {
                           <img
                             src={q.imageUrl}
                             alt="Question"
-                            className="w-12 h-12 rounded-lg object-cover border border-white/10"
+                            className="w-12 h-12 rounded-lg object-cover border border-border"
                           />
                         ) : (
-                          <span className="text-slate-500 text-xs">-</span>
+                          <span className="text-slate-400 text-xs">-</span>
                         )}
                       </TableCell>
                       <TableCell className="max-w-[200px]">
-                        <p className="truncate text-slate-300 font-medium">{q.question}</p>
+                        <p className="truncate text-slate-600 font-medium">{q.question}</p>
                       </TableCell>
                       <TableCell>
                         {renderAnswerDisplay(q)}
                       </TableCell>
-                      <TableCell className="text-center text-slate-400">
+                      <TableCell className="text-center text-slate-500">
                         {Math.round(q.timeLimit / 60)}m
                       </TableCell>
-                      <TableCell className="text-center font-bold text-amber-500">
+                      <TableCell className="text-center font-bold text-amber-600">
                         {q.points}
                       </TableCell>
                       <TableCell className="text-center">
@@ -544,7 +541,7 @@ const QuestionBank = () => {
                           onClick={() => deleteQuestion(q.id)}
                           variant="ghost"
                           size="sm"
-                          className="text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                          className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
