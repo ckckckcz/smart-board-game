@@ -239,8 +239,14 @@ export const useGameStore = create<GameStore>()(
       },
 
       endGame: async () => {
-        const { player, leaderboard } = get();
-        if (!player) return;
+        const { player, leaderboard, gameComplete } = get();
+        if (!player || gameComplete) return;
+
+        // Mark as complete immediately to prevent multiple calls
+        set({
+          gameComplete: true,
+          isPlaying: false
+        });
 
         const completedPlayer: Player = {
           ...player,
@@ -257,10 +263,9 @@ export const useGameStore = create<GameStore>()(
           console.error('❌ Failed to save player to Supabase:', error);
         }
 
+        const currentLeaderboard = get().leaderboard;
         set({
-          gameComplete: true,
-          isPlaying: false,
-          leaderboard: [...leaderboard, completedPlayer].sort((a, b) => b.score - a.score),
+          leaderboard: [...currentLeaderboard, completedPlayer].sort((a, b) => b.score - a.score),
         });
       },
 

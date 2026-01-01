@@ -297,5 +297,4 @@ const QuestionPopup = () => {
     </div>
   );
 };
-
 export default QuestionPopup;

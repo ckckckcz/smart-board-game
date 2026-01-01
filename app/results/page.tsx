@@ -30,10 +30,15 @@ export default function ResultsPage() {
 
     if (!player) return null;
 
-    const topPlayers = leaderboard
+    // Use a Map to deduplicate by id just in case there are duplicates in the data
+    const uniqueLeaderboard = Array.from(
+        new Map(leaderboard.map(p => [p.id, p])).values()
+    );
+
+    const topPlayers = uniqueLeaderboard
         .filter(p => p.roundId === currentRound?.id)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 5);
+        .slice(0, 10); // Show more players if needed, or keep at 5
 
     const getMedalIcon = (rank: number) => {
         switch (rank) {
