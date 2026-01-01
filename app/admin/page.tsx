@@ -106,7 +106,7 @@ export default function AdminPanel() {
                     ))}
                 </div>
 
-                <div style={{ background: '#fff', borderRadius: '20px', padding: '1.5rem', border: '3px solid var(--border)' }} className="border-border">
+                <div>
                     {renderContent()}
                 </div>
             </main>

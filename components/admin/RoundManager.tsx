@@ -65,7 +65,7 @@ const RoundManager = () => {
         </div>
 
         {/* Question Counts per Category */}
-        <div className="mb-8">
+        <div className="mb-8 bg-white border border-border rounded-3xl shadow-sm p-6 md:p-8">
           <label className="text-sm font-bold text-slate-600 mb-3 block tracking-wide">
             Konfigurasi Soal
           </label>
