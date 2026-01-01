@@ -63,6 +63,10 @@ function dbQuestionToQuestion(dbQuestion: DbQuestion): Question {
         question.matchingAnswer = dbQuestion.matching_answer;
     }
 
+    if (dbQuestion.image_urls) {
+        question.imageUrls = dbQuestion.image_urls;
+    }
+
     return question;
 }
 
@@ -97,6 +101,10 @@ function questionToDbQuestion(question: Question): Partial<DbQuestion> {
 
     if (question.matchingAnswer) {
         dbQuestion.matching_answer = question.matchingAnswer;
+    }
+
+    if (question.imageUrls) {
+        dbQuestion.image_urls = question.imageUrls;
     }
 
     return dbQuestion;
@@ -209,7 +217,7 @@ export const questionsService = {
             .single();
 
         if (error) {
-            console.error('Error creating question:', error);
+            console.error('Error creating question:', error.message, error.details, error.hint);
             return null;
         }
 

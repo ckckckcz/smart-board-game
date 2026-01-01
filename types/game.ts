@@ -14,6 +14,7 @@ export interface Question {
   type: QuestionType;
   question: string;
   imageUrl?: string; // Optional image for each question
+  imageUrls?: string[]; // Multiple images support (up to 3)
   // For multiple choice
   options?: string[];
   // For true/false

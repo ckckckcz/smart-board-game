@@ -40,8 +40,7 @@ const QuestionBank = () => {
   const [points, setPoints] = useState(100);
 
   // Image upload
-  const [imageUrl, setImageUrl] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Essay
@@ -101,21 +100,32 @@ const QuestionBank = () => {
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setImageUrl(result);
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files) {
+      const remainingSlots = 3 - imageUrls.length;
+      const filesToUpload = Array.from(files).slice(0, remainingSlots);
+
+      filesToUpload.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          setImageUrls(prev => [...prev, result].slice(0, 3));
+        };
+        reader.readAsDataURL(file);
+      });
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
-  const clearImage = () => {
-    setImageUrl('');
-    setImagePreview(null);
+  const removeSpecificImage = (index: number) => {
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearImages = () => {
+    setImageUrls([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -137,7 +147,7 @@ const QuestionBank = () => {
       { left: '', right: '' }
     ]);
     setMatchingAnswer('');
-    clearImage();
+    clearImages();
   };
 
   const handleAddQuestion = () => {
@@ -159,9 +169,10 @@ const QuestionBank = () => {
       points,
     };
 
-    // Add image if provided
-    if (imageUrl) {
-      newQuestion.imageUrl = imageUrl;
+    // Add images if provided
+    if (imageUrls.length > 0) {
+      newQuestion.imageUrls = imageUrls;
+      newQuestion.imageUrl = imageUrls[0]; // Provide first image as main imageUrl for backward compatibility
     }
 
     // Add type-specific fields
@@ -335,82 +346,54 @@ const QuestionBank = () => {
           </div>
 
           {/* Image Upload Section */}
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
               <Image className="w-4 h-4" />
-              Gambar Soal
+              Gambar Soal (Maksimal 3)
             </Label>
 
-            {!imagePreview ? (
-              /* Dropzone Style Upload */
-              <div
-                className="w-full border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="question-image"
-                />
-                <div className="flex flex-col items-center justify-center py-10 px-6">
-                  {/* Upload Icon */}
-                  <div className="mb-4">
-                    <svg
-                      className="w-10 h-10 text-slate-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+            {/* Image List / Dropzone */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {imageUrls.map((url, idx) => (
+                <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-white group/thumb">
+                  <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSpecificImage(idx)}
+                      className="text-white hover:bg-rose-500 rounded-full w-10 h-10 p-0"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                      />
-                    </svg>
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
                   </div>
-
-                  {/* Text */}
-                  <p className="text-slate-500 text-sm mb-1">Klik untuk unggah gambar</p>
-                  <p className="text-slate-400 text-xs mb-4">Maks. Ukuran: 30MB</p>
-
-                  {/* Browse Button */}
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-full cursor-pointer"
-                  >
-                    Pilih File
-                  </Button>
+                  <Badge className="absolute top-2 left-2 bg-blue-600/80 backdrop-blur-sm text-white text-[10px] border-0">
+                    Gambar {idx + 1}
+                  </Badge>
                 </div>
-              </div>
-            ) : (
-              /* Image Preview */
-              <div className="w-full border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 p-4">
-                <div className="relative w-full flex flex-col items-center">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full max-h-64 object-contain rounded-xl border border-border bg-white"
+              ))}
+
+              {imageUrls.length < 3 && (
+                <div
+                  className="aspect-video border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all cursor-pointer flex flex-col items-center justify-center p-4 text-center group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                    <Plus className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-tighter">Tambah Gambar {imageUrls.length + 1}/3</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={clearImage}
-                    className="mt-4 text-rose-500 hover:bg-rose-50 cursor-pointer"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Hapus Gambar
-                  </Button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div className="h-px bg-slate-100 my-4" />
@@ -634,9 +617,12 @@ const QuestionBank = () => {
 
       {/* Questions List */}
       <div className="bg-white border border-border rounded-3xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-border flex items-center gap-2 bg-slate-50">
-          <BookOpen className="w-5 h-5 text-blue-500" />
-          <h3 className="text-lg font-bold text-slate-900">Daftar Soal ({allQuestions.length})</h3>
+        <div className="p-6 border-b border-border flex items-center justify-between bg-slate-50">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-blue-500" />
+            <h3 className="text-lg font-bold text-slate-900">Daftar Soal ({allQuestions.length})</h3>
+          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Urut Berdasarkan Kategori (C1-C6)</p>
         </div>
 
         <div className="p-0">
@@ -660,53 +646,66 @@ const QuestionBank = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allQuestions.map((q) => (
-                    <TableRow key={q.id} className="border-border hover:bg-slate-50 transition-colors">
-                      <TableCell>
-                        <Badge className={`${CATEGORY_COLORS[q.category]} text-white border-0`}>
-                          {q.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border border-border">
-                          {TYPE_LABELS[q.type]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {q.imageUrl ? (
-                          <img
-                            src={q.imageUrl}
-                            alt="Question"
-                            className="w-12 h-12 rounded-lg object-cover border border-border"
-                          />
-                        ) : (
-                          <span className="text-slate-400 text-xs">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <p className="truncate text-slate-600 font-medium">{q.question}</p>
-                      </TableCell>
-                      <TableCell>
-                        {renderAnswerDisplay(q)}
-                      </TableCell>
-                      <TableCell className="text-center text-slate-500">
-                        {Math.round(q.timeLimit / 60)}m
-                      </TableCell>
-                      <TableCell className="text-center font-bold text-amber-600">
-                        {q.points}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          onClick={() => deleteQuestion(q.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {allQuestions
+                    .slice()
+                    .sort((a, b) => {
+                      const catA = a.category.replace('C', '');
+                      const catB = b.category.replace('C', '');
+                      return parseInt(catA) - parseInt(catB);
+                    })
+                    .map((q) => (
+                      <TableRow key={q.id} className="border-border hover:bg-slate-50 transition-colors">
+                        <TableCell>
+                          <Badge className={`${CATEGORY_COLORS[q.category]} text-white border-0`}>
+                            {q.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-slate-50 text-slate-600 border border-border">
+                            {TYPE_LABELS[q.type]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex -space-x-4">
+                            {q.imageUrls && q.imageUrls.length > 0 ? (
+                              q.imageUrls.map((url, i) => (
+                                <div key={i} className="relative w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-sm shrink-0">
+                                  <img src={url} alt="" className="w-full h-full object-cover" />
+                                </div>
+                              ))
+                            ) : q.imageUrl ? (
+                              <div className="relative w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-sm shrink-0">
+                                <img src={q.imageUrl} alt="" className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 text-xs">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <p className="truncate text-slate-600 font-medium">{q.question}</p>
+                        </TableCell>
+                        <TableCell>
+                          {renderAnswerDisplay(q)}
+                        </TableCell>
+                        <TableCell className="text-center text-slate-500">
+                          {Math.round(q.timeLimit / 60)}m
+                        </TableCell>
+                        <TableCell className="text-center font-bold text-amber-600">
+                          {q.points}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            onClick={() => deleteQuestion(q.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>

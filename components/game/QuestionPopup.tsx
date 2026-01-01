@@ -154,17 +154,29 @@ const QuestionPopup = () => {
         {/* Main Content */}
         <div className="p-8">
           {/* Question Image (if available) */}
-          {currentQuestion.imageUrl && (
+          {(currentQuestion.imageUrls && currentQuestion.imageUrls.length > 0) ? (
+            <div className="mb-6 flex flex-wrap justify-center gap-4">
+              {currentQuestion.imageUrls.map((url, i) => (
+                <div key={i} className="relative flex-1 min-w-[150px] h-48 bg-slate-50 rounded-2xl border border-border shadow-sm overflow-hidden flex items-center justify-center p-4">
+                  <img
+                    src={url}
+                    alt={`Question ${i + 1}`}
+                    className="max-w-full max-h-full object-contain transition-transform hover:scale-110 duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : currentQuestion.imageUrl ? (
             <div className="mb-6 flex justify-center">
-              <div className="relative max-w-md w-full">
+              <div className="relative max-w-md w-full h-64 bg-slate-50 rounded-2xl border border-border shadow-sm overflow-hidden flex items-center justify-center p-4">
                 <img
                   src={currentQuestion.imageUrl}
                   alt="Question"
-                  className="w-full max-h-64 object-contain rounded-2xl border border-border bg-slate-50"
+                  className="max-w-full max-h-full object-contain transition-transform hover:scale-105 duration-300"
                 />
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Question Text */}
           <div className="mb-8 p-6 rounded-2xl bg-slate-50 border border-border shadow-inner min-h-[80px] flex items-center justify-center text-center">

@@ -28,8 +28,9 @@ export interface DbQuestion {
     options: string[] | null;
     correct_answer: string | null;
     essay_answer: string | null;
-    matching_pairs: { left: string; right: string }[] | null;
+    matching_pairs: any[] | null;
     matching_answer: string | null;
+    image_urls: string[] | null;
     time_limit: number;
     points: number;
     created_at: string;
