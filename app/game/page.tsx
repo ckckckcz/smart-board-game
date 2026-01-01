@@ -137,20 +137,40 @@ export default function GameBoard() {
                     {questions.map((q, index) => {
                         const answerResult = answeredQuestions[q.id];
                         const isHighlighted = selectedQuestionIndex === index && isSpinning;
+
+                        // Variasi warna berani (Menghindari Biru & Kuning)
+                        const colorVariants = [
+                            { class: styles.tilePink, color: '#db2777' },
+                            { class: styles.tileGreen, color: '#000080' },
+                            { class: styles.tileTeal, color: '#0000FF' },
+                            { class: styles.tileRed, color: '#dc2626' },
+                            { class: styles.tilePurple, color: '#9333ea' }
+                        ];
+                        const variant = colorVariants[index % colorVariants.length];
+
                         return (
                             <div
                                 key={q.id}
                                 className={`
                                     ${styles.tile}
+                                    ${!answerResult && !isHighlighted ? variant.class : ''}
                                     ${answerResult === 'correct' ? styles.tileCorrect : ''}
                                     ${answerResult === 'wrong' ? styles.tileWrong : ''}
                                     ${isHighlighted ? styles.tileActive : ''}
                                 `}
+                                style={{
+                                    backgroundColor: (!answerResult && !isHighlighted) ? variant.color : undefined,
+                                    color: (!answerResult && !isHighlighted) ? 'white' : undefined,
+                                    borderColor: (!answerResult && !isHighlighted) ? 'rgba(255,255,255,0.2)' : undefined,
+                                    opacity: answerResult ? 0.5 : 1,
+                                    pointerEvents: answerResult ? 'none' : 'auto',
+                                    cursor: answerResult ? 'default' : 'pointer'
+                                }}
                             >
                                 <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>{q.category}</div>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>#{index + 1}</div>
-                                {answerResult === 'correct' && <CheckCircle className="absolute w-8 h-8 opacity-30" />}
-                                {answerResult === 'wrong' && <X className="absolute w-8 h-8 opacity-30" />}
+                                {answerResult === 'correct' && <CheckCircle className="absolute w-20 h-20 opacity-40 text-white" />}
+                                {answerResult === 'wrong' && <X className="absolute w-20 h-20 opacity-40 text-white" />}
                             </div>
                         );
                     })}

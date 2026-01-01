@@ -71,15 +71,15 @@
   z-index: 25;
   width: 95%;
   max-width: 1000px;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 4px solid rgba(255, 255, 255, 0.7);
+  background: rgba(240, 249, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 4px solid rgba(255, 255, 255, 0.8);
   border-radius: 40px;
   padding: 2rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 20px 50px rgba(2, 132, 199, 0.1);
   margin-top: 1rem;
-  margin-bottom: 120px; /* Space for street */
+  margin-bottom: 120px;
 }
 
 /* Common Header Styles */
@@ -90,10 +90,11 @@
   width: 100%;
   margin-bottom: 2rem;
   z-index: 30;
-  background: rgba(255, 255, 255, 0.6);
+  background: #f8fafc;
   padding: 1rem 2rem;
   border-radius: 30px;
-  border: 3px solid #000;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .playerBadge {
@@ -105,7 +106,7 @@
 .playerName {
   font-size: 1.5rem;
   font-weight: 900;
-  color: #000;
+  color: #1e293b;
 }
 
 .roundName {
@@ -138,7 +139,7 @@
 /* Buttons */
 .btn {
   background: #0288d1;
-  background: linear-gradient(to bottom, #29b6f6 0%, #0288d1 100%);
+  background: linear-gradient(to bottom, #38bdf8 0%, #0288d1 100%);
   color: white;
   border: 4px solid #ffffff;
   border-radius: 50px;
@@ -146,8 +147,8 @@
   font-size: 1.2rem;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 5px 0 #01579b;
-  transition: all 0.1s ease;
+  box-shadow: 0 8px 0 #01579b, 0 10px 20px rgba(2, 136, 209, 0.3);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   text-transform: uppercase;
   position: relative;
   overflow: hidden;
@@ -157,21 +158,14 @@
   gap: 0.5rem;
 }
 
-.btn::before {
-  content: "";
-  position: absolute;
-  top: 5%;
-  left: 5%;
-  width: 90%;
-  height: 40%;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 40px;
-  pointer-events: none;
+.btn:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 #01579b, 0 5px 10px rgba(2, 136, 209, 0.2);
 }
 
-.btn:active {
-  transform: translateY(4px);
-  box-shadow: none;
+.btn:hover:not(:active) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 0 #01579b, 0 15px 25px rgba(2, 136, 209, 0.4);
 }
 
 .btnSecondary {
@@ -190,47 +184,133 @@
 
 .tile {
   aspect-ratio: 1;
-  background: #fff;
-  border: 3px solid #000;
-  border-radius: 20px;
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), transparent);
+  pointer-events: none;
+  opacity: 0.4;
 }
 
 .tile:hover {
-  transform: scale(1.05);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 0 #bae6fd, 0 15px 25px rgba(2, 132, 199, 0.15);
+  border-color: #bae6fd;
+}
+
+.tile:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 #bae6fd, 0 5px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tilePink {
+  background: #db2777;
+  border-color: #be185d;
+  box-shadow: 0 8px 0 #9d174d, 0 10px 20px rgba(219, 39, 119, 0.3);
+  color: white;
+}
+.tilePink:hover {
+  box-shadow: 0 12px 0 #9d174d, 0 15px 25px rgba(219, 39, 119, 0.4);
+}
+
+.tileTeal {
+  background: #0d9488;
+  border-color: #0f766e;
+  box-shadow: 0 8px 0 #134e4a, 0 10px 20px rgba(13, 148, 136, 0.3);
+  color: white;
+}
+.tileTeal:hover {
+  box-shadow: 0 12px 0 #134e4a, 0 15px 25px rgba(13, 148, 136, 0.4);
+}
+
+.tileGreen {
+  background: #16a34a;
+  border-color: #15803d;
+  box-shadow: 0 8px 0 #14532d, 0 10px 20px rgba(22, 163, 74, 0.3);
+  color: white;
+}
+.tileGreen:hover {
+  box-shadow: 0 12px 0 #14532d, 0 15px 25px rgba(22, 163, 74, 0.4);
+}
+
+.tileRed {
+  background: #dc2626;
+  border-color: #b91c1c;
+  box-shadow: 0 8px 0 #7f1d1d, 0 10px 20px rgba(220, 38, 38, 0.3);
+  color: white;
+}
+.tileRed:hover {
+  box-shadow: 0 12px 0 #7f1d1d, 0 15px 25px rgba(220, 38, 38, 0.4);
+}
+
+.tilePurple {
+  background: #9333ea;
+  border-color: #7e22ce;
+  box-shadow: 0 8px 0 #581c87, 0 10px 20px rgba(147, 51, 234, 0.3);
+  color: white;
+}
+.tilePurple:hover {
+  box-shadow: 0 12px 0 #581c87, 0 15px 25px rgba(147, 51, 234, 0.4);
 }
 
 .tileCorrect {
-  background: #4caf50;
+  background: #10b981;
   color: white;
+  border-color: #059669;
+  box-shadow: 0 4px 0 #047857;
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
 }
 
 .tileWrong {
-  background: #f44336;
+  background: #ef4444;
   color: white;
+  border-color: #dc2626;
+  box-shadow: 0 4px 0 #b91c1c;
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
 }
 
 .tileActive {
-  background: #ffeb3b;
-  border-color: #fbc02d;
+  background: #facc15;
+  border-color: #eab308;
+  box-shadow: 0 8px 0 #a16207, 0 0 30px rgba(250, 204, 21, 0.4);
+  color: #854d0e;
   animation: pulse 1.5s infinite;
+}
+
+.tileActive:hover {
+  box-shadow: 0 12px 0 #a16207, 0 0 40px rgba(250, 204, 21, 0.6);
 }
 
 @keyframes pulse {
   0% {
-    transform: scale(1);
+    transform: translateY(0);
   }
   50% {
-    transform: scale(1.05);
+    transform: translateY(-8px);
   }
   100% {
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
