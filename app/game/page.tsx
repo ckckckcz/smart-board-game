@@ -138,33 +138,25 @@ export default function GameBoard() {
                         const answerResult = answeredQuestions[q.id];
                         const isHighlighted = selectedQuestionIndex === index && isSpinning;
 
-                        // Variasi warna berani (Menghindari Biru & Kuning)
-                        const colorVariants = [
-                            { class: styles.tilePink, color: '#db2777' },
-                            { class: styles.tileGreen, color: '#000080' },
-                            { class: styles.tileTeal, color: '#0000FF' },
-                            { class: styles.tileRed, color: '#dc2626' },
-                            { class: styles.tilePurple, color: '#9333ea' }
-                        ];
-                        const variant = colorVariants[index % colorVariants.length];
+                        const tileColor = '#8FD9FB';
 
                         return (
                             <div
                                 key={q.id}
                                 className={`
                                     ${styles.tile}
-                                    ${!answerResult && !isHighlighted ? variant.class : ''}
                                     ${answerResult === 'correct' ? styles.tileCorrect : ''}
                                     ${answerResult === 'wrong' ? styles.tileWrong : ''}
                                     ${isHighlighted ? styles.tileActive : ''}
                                 `}
                                 style={{
-                                    backgroundColor: (!answerResult && !isHighlighted) ? variant.color : undefined,
-                                    color: (!answerResult && !isHighlighted) ? 'white' : undefined,
-                                    borderColor: (!answerResult && !isHighlighted) ? 'rgba(255,255,255,0.2)' : undefined,
+                                    backgroundColor: (!answerResult && !isHighlighted) ? tileColor : undefined,
+                                    color: (!answerResult && !isHighlighted) ? '#1e293b' : undefined,
+                                    borderColor: (!answerResult && !isHighlighted) ? 'rgba(0,0,0,0.1)' : undefined,
                                     opacity: answerResult ? 0.5 : 1,
                                     pointerEvents: answerResult ? 'none' : 'auto',
-                                    cursor: answerResult ? 'default' : 'pointer'
+                                    cursor: answerResult ? 'default' : 'pointer',
+                                    boxShadow: (!answerResult && !isHighlighted) ? '0 8px 0 #78c1e0' : undefined
                                 }}
                             >
                                 <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>{q.category}</div>
