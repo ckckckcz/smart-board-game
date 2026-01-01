@@ -282,14 +282,6 @@ const QuestionPopup = () => {
           {/* Footer Actions */}
           <div className="flex items-center gap-4 pt-4 border-t border-border">
             <Button
-              onClick={handleSkip}
-              variant="ghost"
-              className="h-12 px-6 font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer rounded-xl transition-colors"
-            >
-              <SkipForward className="w-4 h-4 mr-2" />
-              LEWATI
-            </Button>
-            <Button
               onClick={handleAnswer}
               disabled={!canAnswer()}
               className={`
