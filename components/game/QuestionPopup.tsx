@@ -62,10 +62,14 @@ const QuestionPopup = () => {
           answerQuestion(essayAnswer.trim());
           break;
         case 'matching':
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const answer = `1${matchingAnswers['1']}-2${matchingAnswers['2']}-3${matchingAnswers['3']}`;
-          if (!matchingAnswers['1'] || !matchingAnswers['2'] || !matchingAnswers['3']) return;
-          answerQuestion(answer);
+          if (!currentQuestion.matchingPairs) return;
+          const answers = currentQuestion.matchingPairs.map((_, i) => {
+            const num = i + 1;
+            return `${num}${matchingAnswers[String(num)] || ''}`;
+          }).join('-');
+
+          if (currentQuestion.matchingPairs.some((_, i) => !matchingAnswers[String(i + 1)])) return;
+          answerQuestion(answers);
           break;
       }
     }, 300);
@@ -94,7 +98,8 @@ const QuestionPopup = () => {
       case 'essay':
         return !!essayAnswer.trim();
       case 'matching':
-        return !!matchingAnswers['1'] && !!matchingAnswers['2'] && !!matchingAnswers['3'];
+        if (!currentQuestion.matchingPairs) return false;
+        return currentQuestion.matchingPairs.every((_, i) => !!matchingAnswers[String(i + 1)]);
       default:
         return false;
     }
@@ -246,30 +251,48 @@ const QuestionPopup = () => {
             )}
 
             {currentQuestion.type === 'matching' && currentQuestion.matchingPairs && (
-              <div className="space-y-4">
+              <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                 {currentQuestion.matchingPairs.map((pair, index) => (
-                  <div key={index} className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-border">
-                    <div className="flex-1 flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center font-bold text-slate-600 text-sm">
+                  <div key={index} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-border hover:border-blue-200 transition-colors">
+                    {/* LEFT SIDE: Number + (Image or Text) */}
+                    <div className="flex-1 flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black shadow-md shrink-0">
                         {index + 1}
-                      </span>
-                      <span className="text-sm font-medium text-slate-700">{pair.left}</span>
+                      </div>
+
+                      {pair.leftImage ? (
+                        <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-slate-200 bg-white">
+                          <img src={pair.leftImage} alt={`Item ${index + 1}`} className="w-full h-full object-contain" />
+                        </div>
+                      ) : (
+                        <span className="text-base font-bold text-slate-700 leading-tight">{pair.left}</span>
+                      )}
                     </div>
-                    <span className="text-slate-400">
-                      <HelpCircle className="w-4 h-4" />
-                    </span>
-                    <div className="w-32">
+
+                    {/* CONNECTING ICON */}
+                    <div className="text-slate-300">
+                      <HelpCircle className="w-5 h-5" />
+                    </div>
+
+                    {/* RIGHT SIDE: Select Option */}
+                    <div className="w-48">
                       <Select
-                        value={matchingAnswers[String(index + 1)]}
+                        value={matchingAnswers[String(index + 1)] || ''}
                         onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
                       >
-                        <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-10">
+                        <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-12 rounded-xl font-bold">
                           <SelectValue placeholder="Pilih..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 text-slate-900">
-                          <SelectItem value="A">Pasangan A</SelectItem>
-                          <SelectItem value="B">Pasangan B</SelectItem>
-                          <SelectItem value="C">Pasangan C</SelectItem>
+                        <SelectContent className="bg-white border-slate-200 text-slate-900 max-w-[300px]">
+                          {currentQuestion.matchingPairs?.map((p, i) => {
+                            const label = String.fromCharCode(65 + i); // A, B, C...
+                            return (
+                              <SelectItem key={label} value={label} className="font-bold">
+                                <span className="text-blue-600 mr-2">{label}.</span>
+                                <span className="truncate">{p.right}</span>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>

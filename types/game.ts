@@ -5,6 +5,7 @@ export type QuestionType = 'multiple_choice' | 'true_false' | 'essay' | 'matchin
 export interface MatchingPair {
   left: string;
   right: string;
+  leftImage?: string;
 }
 
 export interface Question {

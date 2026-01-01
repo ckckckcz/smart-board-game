@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Plus, Trash2, BookOpen, Clock, AlertCircle, Image, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Plus, Trash2, BookOpen, Clock, AlertCircle, Image, X, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useGameStore } from '@/hooks/useGameStore';
-import { Question, QuestionCategory, QuestionType } from '@/types/game';
+import { Question, QuestionCategory, QuestionType, MatchingPair } from '@/types/game';
 import { CATEGORY_COLORS } from '@/data/mockData';
 
 const TYPE_LABELS: Record<QuestionType, string> = {
@@ -58,13 +59,46 @@ const QuestionBank = () => {
   const [trueFalseAnswer, setTrueFalseAnswer] = useState<string>('');
 
   // Matching
-  const [leftItem1, setLeftItem1] = useState('');
-  const [leftItem2, setLeftItem2] = useState('');
-  const [leftItem3, setLeftItem3] = useState('');
-  const [rightItemA, setRightItemA] = useState('');
-  const [rightItemB, setRightItemB] = useState('');
-  const [rightItemC, setRightItemC] = useState('');
+  // Matching
+  const [matchingPairsInput, setMatchingPairsInput] = useState<MatchingPair[]>([
+    { left: '', right: '' },
+    { left: '', right: '' },
+    { left: '', right: '' }
+  ]);
   const [matchingAnswer, setMatchingAnswer] = useState('');
+
+  const addMatchingPair = () => {
+    if (matchingPairsInput.length < 10) {
+      setMatchingPairsInput([...matchingPairsInput, { left: '', right: '' }]);
+    }
+  };
+
+  const removeMatchingPair = (index: number) => {
+    if (matchingPairsInput.length > 1) {
+      setMatchingPairsInput(matchingPairsInput.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateMatchingPair = (index: number, updates: Partial<MatchingPair>) => {
+    setMatchingPairsInput(matchingPairsInput.map((pair, i) =>
+      i === index ? { ...pair, ...updates } : pair
+    ));
+  };
+
+  const handlePairImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateMatchingPair(index, { leftImage: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePairImage = (index: number) => {
+    updateMatchingPair(index, { leftImage: undefined });
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,24 +131,30 @@ const QuestionBank = () => {
     setOptionE('');
     setCorrectOption('');
     setTrueFalseAnswer('');
-    setLeftItem1('');
-    setLeftItem2('');
-    setLeftItem3('');
-    setRightItemA('');
-    setRightItemB('');
-    setRightItemC('');
+    setMatchingPairsInput([
+      { left: '', right: '' },
+      { left: '', right: '' },
+      { left: '', right: '' }
+    ]);
     setMatchingAnswer('');
     clearImage();
   };
 
   const handleAddQuestion = () => {
-    if (!questionText.trim()) return;
+    // Validation
+    const trimmedQuestion = questionText.trim();
+
+    // For types other than matching, question text is strictly required
+    if (type !== 'matching' && !trimmedQuestion) {
+      toast.error('Teks pertanyaan wajib diisi!');
+      return;
+    }
 
     const newQuestion: Question = {
       id: `q_${Date.now()}`,
       category,
       type,
-      question: questionText.trim(),
+      question: trimmedQuestion || (type === 'matching' ? 'Pasangkan item-item berikut dengan benar:' : ''),
       timeLimit: timeLimit * 60, // Convert minutes to seconds
       points,
     };
@@ -127,12 +167,17 @@ const QuestionBank = () => {
     // Add type-specific fields
     switch (type) {
       case 'essay':
-        if (!essayAnswer.trim()) return;
+        if (!essayAnswer.trim()) {
+          toast.error('Kunci jawaban essay wajib diisi!');
+          return;
+        }
         newQuestion.essayAnswer = essayAnswer.trim();
         break;
       case 'multiple_choice':
-        // At least A, B required, C, D, E are optional
-        if (!optionA || !optionB || !correctOption) return;
+        if (!optionA || !optionB || !correctOption) {
+          toast.error('Lengkapi pilihan A & B serta tentukan jawaban benar!');
+          return;
+        }
         const options = [optionA, optionB];
         if (optionC) options.push(optionC);
         if (optionD) options.push(optionD);
@@ -141,36 +186,59 @@ const QuestionBank = () => {
         newQuestion.correctAnswer = correctOption;
         break;
       case 'true_false':
-        if (!trueFalseAnswer) return;
+        if (!trueFalseAnswer) {
+          toast.error('Pilih jawaban Benar atau Salah!');
+          return;
+        }
         newQuestion.correctAnswer = trueFalseAnswer === 'true';
         break;
       case 'matching':
-        if (!leftItem1 || !leftItem2 || !leftItem3 || !rightItemA || !rightItemB || !rightItemC || !matchingAnswer) return;
-        newQuestion.matchingPairs = [
-          { left: leftItem1, right: rightItemA },
-          { left: leftItem2, right: rightItemB },
-          { left: leftItem3, right: rightItemC },
-        ];
-        newQuestion.matchingAnswer = matchingAnswer.trim();
+        // Filter out completely empty pairs
+        const validPairs = matchingPairsInput.filter(p => p.left || p.leftImage || p.right);
+
+        if (validPairs.length < 1) {
+          toast.error('Minimal harus ada 1 pasangan!');
+          return;
+        }
+
+        // Check for incomplete pairs
+        if (validPairs.some(p => (!p.left && !p.leftImage) || !p.right)) {
+          toast.error('Pastikan semua pasangan memiliki bagian kiri (teks/gambar) dan kanan!');
+          return;
+        }
+
+        if (!matchingAnswer.trim()) {
+          toast.error('Kunci jawaban matching (format 1A-2B) wajib diisi!');
+          return;
+        }
+
+        newQuestion.matchingPairs = validPairs;
+        newQuestion.matchingAnswer = matchingAnswer.trim().toUpperCase();
         break;
     }
 
-    addQuestion(newQuestion);
-    resetForm();
+    try {
+      addQuestion(newQuestion);
+      toast.success('Soal berhasil disimpan!');
+      resetForm();
+    } catch (error) {
+      console.error(error);
+      toast.error('Gagal menyimpan soal. Silakan coba lagi.');
+    }
   };
 
   const renderAnswerDisplay = (q: Question) => {
     switch (q.type) {
       case 'essay':
-        return <span className="text-sm text-slate-300">{q.essayAnswer || '-'}</span>;
+        return <span className="text-sm text-slate-600 font-medium">{q.essayAnswer || '-'}</span>;
       case 'multiple_choice':
-        return <span className="text-sm text-slate-300">{String(q.correctAnswer) || '-'}</span>;
+        return <span className="text-sm text-slate-600 font-medium">{String(q.correctAnswer) || '-'}</span>;
       case 'true_false':
         return q.correctAnswer
-          ? <span className="text-sm font-bold text-emerald-400">Benar</span>
-          : <span className="text-sm font-bold text-rose-400">Salah</span>;
+          ? <span className="text-sm font-bold text-emerald-600">Benar</span>
+          : <span className="text-sm font-bold text-rose-600">Salah</span>;
       case 'matching':
-        return <span className="text-sm text-slate-300">{q.matchingAnswer || '-'}</span>;
+        return <span className="text-sm text-slate-600 font-bold">{q.matchingAnswer || '-'}</span>;
       default:
         return <span className="text-sm text-slate-500">-</span>;
     }
@@ -419,45 +487,136 @@ const QuestionBank = () => {
 
             {type === 'matching' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                  {/* Pair 1 */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">1. Kiri</Label>
-                    <Input value={leftItem1} onChange={(e) => setLeftItem1(e.target.value)} placeholder="Item 1" className="bg-white border border-slate-200 text-slate-900" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">A. Kanan</Label>
-                    <Input value={rightItemA} onChange={(e) => setRightItemA(e.target.value)} placeholder="Pasangan A" className="bg-white border border-slate-200 text-slate-900" />
-                  </div>
-
-                  {/* Pair 2 */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">2. Kiri</Label>
-                    <Input value={leftItem2} onChange={(e) => setLeftItem2(e.target.value)} placeholder="Item 2" className="bg-white border border-slate-200 text-slate-900" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">B. Kanan</Label>
-                    <Input value={rightItemB} onChange={(e) => setRightItemB(e.target.value)} placeholder="Pasangan B" className="bg-white border border-slate-200 text-slate-900" />
-                  </div>
-
-                  {/* Pair 3 */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">3. Kiri</Label>
-                    <Input value={leftItem3} onChange={(e) => setLeftItem3(e.target.value)} placeholder="Item 3" className="bg-white border border-slate-200 text-slate-900" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">C. Kanan</Label>
-                    <Input value={rightItemC} onChange={(e) => setRightItemC(e.target.value)} placeholder="Pasangan C" className="bg-white border border-slate-200 text-slate-900" />
-                  </div>
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <Label className="text-sm font-bold text-slate-600 uppercase tracking-tighter flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    Daftar Pasangan (Matching)
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addMatchingPair}
+                    className="h-9 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-600 hover:text-white font-bold rounded-xl transition-all"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Tambah Pasangan
+                  </Button>
                 </div>
-                <div className="space-y-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                  <Label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Kunci Jawaban (Format: 1A-2B-3C)</Label>
-                  <Input
-                    value={matchingAnswer}
-                    onChange={(e) => setMatchingAnswer(e.target.value)}
-                    placeholder="1A-2B-3C"
-                    className="bg-white border border-slate-200 text-slate-900 font-mono h-11"
-                  />
+
+                <div className="space-y-4">
+                  {matchingPairsInput.map((pair, index) => (
+                    <div key={index} className="p-5 rounded-3xl bg-white border border-slate-100 shadow-sm relative group animate-slide-in hover:border-blue-200 transition-all">
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                        {/* KIRI: Text atau Gambar */}
+                        <div className="flex-1 w-full space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{index + 1}. BAGIAN KIRI (SOAL)</Label>
+                            {pair.leftImage && (
+                              <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-600 border-blue-100">Ada Gambar</Badge>
+                            )}
+                          </div>
+
+                          <div className="flex gap-4">
+                            <div className="flex-1 space-y-3">
+                              <Input
+                                value={pair.left}
+                                onChange={(e) => updateMatchingPair(index, { left: e.target.value })}
+                                placeholder="Masukkan teks soal..."
+                                className="bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 h-11 text-slate-900"
+                              />
+                              <div className="relative">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handlePairImageUpload(index, e)}
+                                  className="hidden"
+                                  id={`pair-image-${index}`}
+                                />
+                                <label
+                                  htmlFor={`pair-image-${index}`}
+                                  className="flex items-center justify-center gap-2 h-10 px-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-all text-xs text-slate-500 font-bold"
+                                >
+                                  <Image className="w-3.5 h-3.5" />
+                                  {pair.leftImage ? 'Ganti Gambar' : 'Lampirkan Gambar'}
+                                </label>
+                              </div>
+                            </div>
+
+                            {pair.leftImage && (
+                              <div className="relative w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 bg-white shrink-0 group/img">
+                                <img src={pair.leftImage} alt="Preview" className="w-full h-full object-cover" />
+                                <button
+                                  onClick={() => removePairImage(index)}
+                                  className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* CONNECTOR */}
+                        <div className="hidden lg:flex items-center justify-center pt-6">
+                          <div className="w-8 h-px bg-slate-200 relative">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-1">
+                              <ArrowRight className="w-4 h-4 text-slate-300" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* KANAN: Text Jawaban */}
+                        <div className="flex-1 w-full space-y-3">
+                          <Label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{String.fromCharCode(65 + index)}. BAGIAN KANAN (JAWABAN)</Label>
+                          <Input
+                            value={pair.right}
+                            onChange={(e) => updateMatchingPair(index, { right: e.target.value })}
+                            placeholder="Masukkan teks jawaban..."
+                            className="bg-slate-50 border-transparent focus:bg-white focus:border-emerald-500 h-11 text-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      {matchingPairsInput.length > 1 && (
+                        <button
+                          onClick={() => removeMatchingPair(index)}
+                          className="absolute -top-2 -right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-600 transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-700">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <Check className="w-4 h-4" />
+                      </div>
+                      <Label className="text-sm font-bold uppercase tracking-tight">Kunci Jawaban Matching</Label>
+                    </div>
+                    <Badge className="bg-emerald-500 text-white border-0 hover:bg-emerald-600">
+                      Terbaca: {matchingAnswer.split('-').filter(Boolean).length}/{matchingPairsInput.length}
+                    </Badge>
+                  </div>
+
+                  <div className="relative">
+                    <Input
+                      value={matchingAnswer}
+                      onChange={(e) => setMatchingAnswer(e.target.value.toUpperCase())}
+                      placeholder={`Contoh: 1A-2B-3C${matchingPairsInput.length > 3 ? `-4D` : ''}`}
+                      className="bg-white border-emerald-200 text-emerald-900 font-black h-14 text-xl text-center tracking-widest focus:ring-emerald-500 focus:border-emerald-500 rounded-2xl shadow-inner shadow-emerald-100/50"
+                    />
+                  </div>
+
+                  <div className="flex items-start gap-3 bg-white/60 p-4 rounded-2xl border border-emerald-100/50">
+                    <AlertCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-emerald-700 leading-relaxed font-medium">
+                      Gunakan format angka dan huruf kapital dipisahkan tanda strip. <span className="font-bold underline text-emerald-800">Wajib ada {matchingPairsInput.length} pasangan</span> agar sistem penilaian bekerja dengan benar.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
