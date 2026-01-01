@@ -20,7 +20,7 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
   const [showNewPin, setShowNewPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
 
-  const handleChangePin = () => {
+  const handleChangePin = async () => {
     if (!oldPin || !newPin || !confirmPin) {
       toast.error('Semua field harus diisi');
       return;
@@ -36,15 +36,19 @@ const SettingsPanel = ({ onBack }: SettingsPanelProps) => {
       return;
     }
 
-    const success = updateAdminPin(oldPin, newPin);
+    try {
+      const success = await updateAdminPin(oldPin, newPin);
 
-    if (success) {
-      toast.success('PIN berhasil diubah!');
-      setOldPin('');
-      setNewPin('');
-      setConfirmPin('');
-    } else {
-      toast.error('PIN lama salah');
+      if (success) {
+        toast.success('PIN berhasil diubah!');
+        setOldPin('');
+        setNewPin('');
+        setConfirmPin('');
+      } else {
+        toast.error('PIN lama salah');
+      }
+    } catch {
+      toast.error('Terjadi kesalahan. Silakan coba lagi.');
     }
   };
 
