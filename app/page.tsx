@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Play, User, Layers, ShieldCheck, Trophy, Target } from 'lucide-react';
+import { Play, User, Layers, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameStore } from '@/hooks/useGameStore';
+import { useInitializeGame } from '@/hooks/useInitializeGame';
 import DecorativeElements from '@/components/react-bits/background';
 import Link from 'next/link';
 
 export default function StartScreen() {
   const router = useRouter();
   const { rounds, setPlayer, selectRound, startGame } = useGameStore();
+  const { isInitialized, isLoading } = useInitializeGame();
   const [playerName, setPlayerName] = useState('');
   const [selectedRoundId, setSelectedRoundId] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -31,6 +33,18 @@ export default function StartScreen() {
   };
 
   const isFormValid = playerName.trim() && selectedRoundId;
+
+  // Show loading state while initializing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 text-lg">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 relative flex items-center justify-center p-4 overflow-hidden selection:bg-indigo-500/30">

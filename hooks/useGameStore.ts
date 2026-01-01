@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { GameState, Player, Round, Question, QuestionCategory } from '@/types/game';
-import { mockQuestions, mockRounds, mockPlayers, DEFAULT_ADMIN_PIN } from '@/data/mockData';
+import { roundsService, questionsService, playersService, adminService } from '@/lib/db-service';
 
 interface GameStore extends GameState {
   // Data stores
@@ -9,8 +9,11 @@ interface GameStore extends GameState {
   allQuestions: Question[];
   leaderboard: Player[];
   adminPin: string;
+  isLoading: boolean;
+  isInitialized: boolean;
 
   // Actions
+  initializeData: () => Promise<void>;
   setPlayer: (name: string) => void;
   selectRound: (roundId: string) => void;
   startGame: () => void;
@@ -18,17 +21,18 @@ interface GameStore extends GameState {
   answerQuestion: (answer: string | boolean) => void;
   skipQuestion: () => void;
   nextQuestion: () => void;
-  endGame: () => void;
+  endGame: () => Promise<void>;
   resetGame: () => void;
 
   // Admin actions
-  verifyAdminPin: (pin: string) => boolean;
-  updateAdminPin: (oldPin: string, newPin: string) => boolean;
-  addRound: (round: Round) => void;
-  deleteRound: (roundId: string) => void;
-  addQuestion: (question: Question) => void;
-  deleteQuestion: (questionId: string) => void;
-  clearLeaderboard: () => void;
+  verifyAdminPin: (pin: string) => Promise<boolean>;
+  updateAdminPin: (oldPin: string, newPin: string) => Promise<boolean>;
+  addRound: (round: Round) => Promise<void>;
+  deleteRound: (roundId: string) => Promise<void>;
+  addQuestion: (question: Question) => Promise<void>;
+  deleteQuestion: (questionId: string) => Promise<void>;
+  clearLeaderboard: () => Promise<void>;
+  refreshLeaderboard: () => Promise<void>;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -47,10 +51,48 @@ export const useGameStore = create<GameStore>()(
       gameComplete: false,
 
       // Data stores
-      rounds: mockRounds,
-      allQuestions: mockQuestions,
-      leaderboard: mockPlayers,
-      adminPin: DEFAULT_ADMIN_PIN,
+      rounds: [],
+      allQuestions: [],
+      leaderboard: [],
+      adminPin: '1234',
+      isLoading: false,
+      isInitialized: false,
+
+      // Initialize data from Supabase
+      initializeData: async () => {
+        const { isInitialized, isLoading } = get();
+        if (isInitialized || isLoading) return;
+
+        set({ isLoading: true });
+
+        try {
+          // Fetch all data from Supabase
+          const [rounds, questions, players, adminPin] = await Promise.all([
+            roundsService.getAll(),
+            questionsService.getAll(),
+            playersService.getAll(),
+            adminService.getPin(),
+          ]);
+
+          set({
+            rounds,
+            allQuestions: questions,
+            leaderboard: players,
+            adminPin,
+            isInitialized: true,
+            isLoading: false,
+          });
+
+          console.log('✅ Data loaded from Supabase:', {
+            rounds: rounds.length,
+            questions: questions.length,
+            players: players.length,
+          });
+        } catch (error) {
+          console.error('❌ Failed to load data from Supabase:', error);
+          set({ isLoading: false });
+        }
+      },
 
       setPlayer: (name: string) => {
         set({
@@ -156,7 +198,7 @@ export const useGameStore = create<GameStore>()(
       },
 
       skipQuestion: () => {
-        const { player, currentQuestion, answeredQuestions, currentQuestionIndex, questions } = get();
+        const { player, currentQuestion, answeredQuestions, questions } = get();
         if (!player) return;
 
         const newAnsweredQuestions = currentQuestion
@@ -196,14 +238,24 @@ export const useGameStore = create<GameStore>()(
         }
       },
 
-      endGame: () => {
+      endGame: async () => {
         const { player, leaderboard } = get();
         if (!player) return;
 
-        const completedPlayer = {
+        const completedPlayer: Player = {
           ...player,
           completedAt: new Date(),
         };
+
+        // Save to Supabase
+        try {
+          const savedPlayer = await playersService.create(completedPlayer);
+          if (savedPlayer) {
+            console.log('✅ Player saved to Supabase:', savedPlayer.name);
+          }
+        } catch (error) {
+          console.error('❌ Failed to save player to Supabase:', error);
+        }
 
         set({
           gameComplete: true,
@@ -227,41 +279,122 @@ export const useGameStore = create<GameStore>()(
         });
       },
 
-      verifyAdminPin: (pin: string) => {
-        return get().adminPin === pin;
-      },
-
-      updateAdminPin: (oldPin: string, newPin: string) => {
-        if (get().adminPin === oldPin) {
-          set({ adminPin: newPin });
-          return true;
+      verifyAdminPin: async (pin: string) => {
+        try {
+          return await adminService.verifyPin(pin);
+        } catch {
+          // Fallback to local check
+          return get().adminPin === pin;
         }
-        return false;
       },
 
-      addRound: (round: Round) => {
+      updateAdminPin: async (oldPin: string, newPin: string) => {
+        try {
+          const success = await adminService.updatePin(oldPin, newPin);
+          if (success) {
+            set({ adminPin: newPin });
+          }
+          return success;
+        } catch {
+          // Fallback to local update
+          if (get().adminPin === oldPin) {
+            set({ adminPin: newPin });
+            return true;
+          }
+          return false;
+        }
+      },
+
+      addRound: async (round: Round) => {
+        // Optimistic update
         set({ rounds: [...get().rounds, round] });
+
+        try {
+          const savedRound = await roundsService.create(round);
+          if (savedRound) {
+            console.log('✅ Round saved to Supabase:', savedRound.name);
+            // Update with the server-generated ID
+            set({
+              rounds: get().rounds.map(r =>
+                r.id === round.id ? savedRound : r
+              ),
+            });
+          }
+        } catch (error) {
+          console.error('❌ Failed to save round to Supabase:', error);
+        }
       },
 
-      deleteRound: (roundId: string) => {
+      deleteRound: async (roundId: string) => {
+        // Optimistic update
         set({ rounds: get().rounds.filter(r => r.id !== roundId) });
+
+        try {
+          await roundsService.delete(roundId);
+          console.log('✅ Round deleted from Supabase');
+        } catch (error) {
+          console.error('❌ Failed to delete round from Supabase:', error);
+        }
       },
 
-      addQuestion: (question: Question) => {
+      addQuestion: async (question: Question) => {
+        // Optimistic update
         set({ allQuestions: [...get().allQuestions, question] });
+
+        try {
+          const savedQuestion = await questionsService.create(question);
+          if (savedQuestion) {
+            console.log('✅ Question saved to Supabase:', savedQuestion.id);
+            // Update with the server-generated ID
+            set({
+              allQuestions: get().allQuestions.map(q =>
+                q.id === question.id ? savedQuestion : q
+              ),
+            });
+          }
+        } catch (error) {
+          console.error('❌ Failed to save question to Supabase:', error);
+        }
       },
 
-      deleteQuestion: (questionId: string) => {
+      deleteQuestion: async (questionId: string) => {
+        // Optimistic update
         set({ allQuestions: get().allQuestions.filter(q => q.id !== questionId) });
+
+        try {
+          await questionsService.delete(questionId);
+          console.log('✅ Question deleted from Supabase');
+        } catch (error) {
+          console.error('❌ Failed to delete question from Supabase:', error);
+        }
       },
 
-      clearLeaderboard: () => {
+      clearLeaderboard: async () => {
+        // Optimistic update
         set({ leaderboard: [] });
+
+        try {
+          await playersService.clearAll();
+          console.log('✅ Leaderboard cleared from Supabase');
+        } catch (error) {
+          console.error('❌ Failed to clear leaderboard from Supabase:', error);
+        }
+      },
+
+      refreshLeaderboard: async () => {
+        try {
+          const players = await playersService.getAll();
+          set({ leaderboard: players });
+          console.log('✅ Leaderboard refreshed from Supabase');
+        } catch (error) {
+          console.error('❌ Failed to refresh leaderboard:', error);
+        }
       },
     }),
     {
       name: 'smart-shoot-game',
       partialize: (state) => ({
+        // Only persist game session state locally (as cache)
         rounds: state.rounds,
         allQuestions: state.allQuestions,
         leaderboard: state.leaderboard,

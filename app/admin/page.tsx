@@ -2,18 +2,20 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, Layers, BookOpen, BarChart3, Settings, ArrowLeft, LogOut } from 'lucide-react';
+import { GraduationCap, Layers, BookOpen, BarChart3, Settings, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdminLoginModal from '@/components/admin/AdminLoginModal';
 import RoundManager from '@/components/admin/RoundManager';
 import QuestionBank from '@/components/admin/QuestionBank';
 import AnalyticsPanel from '@/components/admin/AnalyticsPanel';
 import SettingsPanel from '@/components/admin/SettingsPanel';
+import { useInitializeGame } from '@/hooks/useInitializeGame';
 
 type AdminTab = 'rounds' | 'questions' | 'analytics' | 'settings';
 
 export default function AdminPanel() {
     const router = useRouter();
+    const { isLoading } = useInitializeGame();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(true);
     const [activeTab, setActiveTab] = useState<AdminTab>('rounds');
@@ -49,6 +51,18 @@ export default function AdminPanel() {
                 return null;
         }
     };
+
+    // Show loading while initializing data
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mx-auto mb-4" />
+                    <p className="text-slate-400 text-lg">Memuat data...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!isAuthenticated) {
         return (
@@ -93,15 +107,6 @@ export default function AdminPanel() {
                             >
                                 <ArrowLeft className="w-4 h-4 mr-2" />
                                 Ke Game
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                className="bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/20"
-                                onClick={() => setIsAuthenticated(false)}
-                            >
-                                <LogOut className="w-4 h-4 mr-2" />
-                                Logout
                             </Button>
                         </div>
                     </div>

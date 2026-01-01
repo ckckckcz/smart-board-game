@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { Lock, Eye, EyeOff, X } from 'lucide-react';
+import { Lock, Eye, EyeOff, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGameStore } from '@/hooks/useGameStore';
@@ -16,17 +16,26 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    if (verifyAdminPin(pin)) {
-      setPin('');
-      setError('');
-      onSuccess();
-    } else {
-      setError('PIN salah. Silakan coba lagi.');
-      setPin('');
+    try {
+      const isValid = await verifyAdminPin(pin);
+      if (isValid) {
+        setPin('');
+        setError('');
+        onSuccess();
+      } else {
+        setError('PIN salah. Silakan coba lagi.');
+        setPin('');
+      }
+    } catch {
+      setError('Terjadi kesalahan. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,16 +120,21 @@ const AdminLoginModal = ({ isOpen, onClose, onSuccess }: AdminLoginModalProps) =
             <Button
               type="button"
               onClick={handleClose}
-              className="h-12 font-bold rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5 transition-all cursor-pointer"
+              disabled={isLoading}
+              className="h-12 font-bold rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5 transition-all cursor-pointer disabled:opacity-50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!pin}
+              disabled={!pin || isLoading}
               className="h-12 font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/20 shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
-              Login
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                'Login'
+              )}
             </Button>
           </div>
         </form>
