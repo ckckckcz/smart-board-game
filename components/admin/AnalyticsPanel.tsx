@@ -1,21 +1,29 @@
 'use client'
-import { Trash2, Trophy, Users, Target, Award, Medal } from 'lucide-react';
+import { useState } from 'react';
+import { Trash2, Trophy, Users, Target, Award, Medal, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameStore } from '@/hooks/useGameStore';
 
 const AnalyticsPanel = () => {
   const { leaderboard, clearLeaderboard, rounds } = useGameStore();
+  const [selectedRound, setSelectedRound] = useState<string>('all');
 
-  // Calculate stats
-  const totalGames = leaderboard.length;
+  // Filter leaderboard by round
+  const filteredLeaderboard = selectedRound === 'all'
+    ? leaderboard
+    : leaderboard.filter(p => p.roundId === selectedRound);
+
+  // Calculate stats based on filtered data
+  const totalGames = filteredLeaderboard.length;
   const averageScore = totalGames > 0
-    ? Math.round(leaderboard.reduce((sum, p) => sum + p.score, 0) / totalGames)
+    ? Math.round(filteredLeaderboard.reduce((sum, p) => sum + p.score, 0) / totalGames)
     : 0;
   const highestScore = totalGames > 0
-    ? Math.max(...leaderboard.map(p => p.score))
+    ? Math.max(...filteredLeaderboard.map(p => p.score))
     : 0;
   const topPlayer = totalGames > 0
-    ? leaderboard.reduce((best, p) => p.score > best.score ? p : best, leaderboard[0])
+    ? filteredLeaderboard.reduce((best, p) => p.score > best.score ? p : best, filteredLeaderboard[0])
     : null;
 
   const getMedalIcon = (rank: number) => {
@@ -35,6 +43,9 @@ const AnalyticsPanel = () => {
     const round = rounds.find(r => r.id === roundId);
     return round?.name || roundId;
   };
+
+  // Sort all players by score (show all, not limited to 20)
+  const sortedLeaderboard = [...filteredLeaderboard].sort((a, b) => b.score - a.score);
 
   return (
     <div className="space-y-6 animate-scale-in">
@@ -83,59 +94,94 @@ const AnalyticsPanel = () => {
 
       {/* Leaderboard */}
       <div className="bg-slate-900/50 border border-white/10 rounded-3xl overflow-hidden shadow-xl">
-        <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-white/5">
+        <div className="px-6 py-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Trophy className="w-5 h-5 text-amber-400" />
             Papan Peringkat
+            {selectedRound !== 'all' && (
+              <span className="text-sm font-normal text-slate-400">
+                ({sortedLeaderboard.length} pemain)
+              </span>
+            )}
           </h3>
-          {leaderboard.length > 0 && (
-            <Button
-              onClick={() => {
-                if (confirm('Yakin ingin menghapus semua data?')) {
-                  clearLeaderboard();
-                }
-              }}
-              variant="ghost"
-              size="sm"
-              className="text-rose-400 hover:text-white hover:bg-rose-500/20 cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Hapus Semua
-            </Button>
-          )}
+
+          <div className="flex items-center gap-3">
+            {/* Round Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-slate-400" />
+              <Select value={selectedRound} onValueChange={setSelectedRound}>
+                <SelectTrigger className="w-[200px] bg-slate-800 border-white/10 text-white h-9">
+                  <SelectValue placeholder="Filter Babak" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-white/10 text-white">
+                  <SelectItem value="all">Semua Babak</SelectItem>
+                  {rounds.map((round) => (
+                    <SelectItem key={round.id} value={round.id}>
+                      {round.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {leaderboard.length > 0 && (
+              <Button
+                onClick={() => {
+                  if (confirm('Yakin ingin menghapus semua data?')) {
+                    clearLeaderboard();
+                  }
+                }}
+                variant="ghost"
+                size="sm"
+                className="text-rose-400 hover:text-white hover:bg-rose-500/20 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Hapus Semua
+              </Button>
+            )}
+          </div>
         </div>
 
-        {leaderboard.length === 0 ? (
+        {sortedLeaderboard.length === 0 ? (
           <div className="px-6 py-12 text-center text-slate-500">
-            Belum ada data permainan.
+            {selectedRound === 'all'
+              ? 'Belum ada data permainan.'
+              : 'Belum ada data permainan untuk babak ini.'}
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
-            {leaderboard
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 20)
-              .map((player, index) => (
-                <div
-                  key={player.id}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
-                >
-                  <div className="flex-shrink-0 w-8 flex justify-center">
-                    {getMedalIcon(index + 1)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-200 truncate">{player.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{getRoundName(player.roundId)}</p>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm hidden sm:flex">
-                    <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded">✓ {player.correctAnswers}</span>
-                    <span className="text-rose-400 font-medium bg-rose-500/10 px-2 py-0.5 rounded">✗ {player.wrongAnswers}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-white">{player.score}</p>
-                    <p className="text-[10px] text-slate-500 uppercase font-bold">poin</p>
-                  </div>
+          <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
+            {sortedLeaderboard.map((player, index) => (
+              <div
+                key={player.id}
+                className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex-shrink-0 w-8 flex justify-center">
+                  {getMedalIcon(index + 1)}
                 </div>
-              ))}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-200 truncate">{player.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{getRoundName(player.roundId)}</p>
+                </div>
+                <div className="flex items-center gap-4 text-sm hidden sm:flex">
+                  <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded">✓ {player.correctAnswers}</span>
+                  <span className="text-rose-400 font-medium bg-rose-500/10 px-2 py-0.5 rounded">✗ {player.wrongAnswers}</span>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-white">{player.score}</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">poin</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer showing total count */}
+        {sortedLeaderboard.length > 0 && (
+          <div className="px-6 py-3 bg-black/20 border-t border-white/5 text-center">
+            <p className="text-xs text-slate-400">
+              Menampilkan <span className="text-white font-bold">{sortedLeaderboard.length}</span> pemain
+              {selectedRound !== 'all' && ` di ${getRoundName(selectedRound)}`}
+            </p>
           </div>
         )}
       </div>

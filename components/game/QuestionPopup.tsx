@@ -148,8 +148,21 @@ const QuestionPopup = () => {
 
         {/* Main Content */}
         <div className="p-8">
+          {/* Question Image (if available) */}
+          {currentQuestion.imageUrl && (
+            <div className="mb-6 flex justify-center">
+              <div className="relative max-w-md w-full">
+                <img
+                  src={currentQuestion.imageUrl}
+                  alt="Question"
+                  className="w-full max-h-64 object-contain rounded-2xl border border-white/10 bg-black/20"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Question Text */}
-          <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/5 shadow-inner min-h-[120px] flex items-center justify-center text-center">
+          <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/5 shadow-inner min-h-[80px] flex items-center justify-center text-center">
             <p className="text-xl md:text-2xl font-bold text-white leading-relaxed">
               {currentQuestion.question}
             </p>
@@ -193,28 +206,31 @@ const QuestionPopup = () => {
             )}
 
             {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {['A', 'B', 'C', 'D'].map((option, index) => (
-                  <button
-                    key={option}
-                    onClick={() => setSelectedAnswer(option)}
-                    className={`
-                        relative p-4 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer flex items-start gap-4 hover:-translate-y-1
-                        ${selectedAnswer === option
-                        ? 'border-indigo-500 bg-indigo-500/20 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
-                        : 'border-slate-700 bg-slate-800/50 hover:border-indigo-400/50 text-slate-300 hover:text-white hover:bg-slate-800'
-                      }
-                      `}
-                  >
-                    <div className={`
-                        w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shrink-0 transition-colors
-                        ${selectedAnswer === option ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400 group-hover:bg-slate-600'}
-                      `}>
-                      {option}
-                    </div>
-                    <span className="mt-1 font-medium leading-snug">{currentQuestion.options?.[index]}</span>
-                  </button>
-                ))}
+              <div className={`grid gap-3 ${currentQuestion.options.length > 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+                {currentQuestion.options.map((optionText, index) => {
+                  const optionLabel = ['A', 'B', 'C', 'D', 'E'][index];
+                  return (
+                    <button
+                      key={optionLabel}
+                      onClick={() => setSelectedAnswer(optionLabel)}
+                      className={`
+                          relative p-4 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer flex items-start gap-4 hover:-translate-y-1
+                          ${selectedAnswer === optionLabel
+                          ? 'border-indigo-500 bg-indigo-500/20 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]'
+                          : 'border-slate-700 bg-slate-800/50 hover:border-indigo-400/50 text-slate-300 hover:text-white hover:bg-slate-800'
+                        }
+                        `}
+                    >
+                      <div className={`
+                          w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg shrink-0 transition-colors
+                          ${selectedAnswer === optionLabel ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400 group-hover:bg-slate-600'}
+                        `}>
+                        {optionLabel}
+                      </div>
+                      <span className="mt-1 font-medium leading-snug">{optionText}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
 

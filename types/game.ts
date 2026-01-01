@@ -12,6 +12,7 @@ export interface Question {
   category: QuestionCategory;
   type: QuestionType;
   question: string;
+  imageUrl?: string; // Optional image for each question
   // For multiple choice
   options?: string[];
   // For true/false

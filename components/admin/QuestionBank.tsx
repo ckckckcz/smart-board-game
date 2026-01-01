@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Trash2, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Trash2, BookOpen, Clock, AlertCircle, Image, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,13 +11,23 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useGameStore } from '@/hooks/useGameStore';
 import { Question, QuestionCategory, QuestionType } from '@/types/game';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/data/mockData';
+import { CATEGORY_COLORS } from '@/data/mockData';
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   essay: 'Essay',
   multiple_choice: 'Pilihan Ganda',
   true_false: 'Benar/Salah',
   matching: 'Menjodohkan',
+};
+
+// Simple category labels (C1-C6 only)
+const SIMPLE_CATEGORY_LABELS: Record<QuestionCategory, string> = {
+  C1: 'C1',
+  C2: 'C2',
+  C3: 'C3',
+  C4: 'C4',
+  C5: 'C5',
+  C6: 'C6',
 };
 
 const QuestionBank = () => {
@@ -28,14 +38,20 @@ const QuestionBank = () => {
   const [timeLimit, setTimeLimit] = useState(3);
   const [points, setPoints] = useState(100);
 
+  // Image upload
+  const [imageUrl, setImageUrl] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Essay
   const [essayAnswer, setEssayAnswer] = useState('');
 
-  // Multiple Choice
+  // Multiple Choice (A-E)
   const [optionA, setOptionA] = useState('');
   const [optionB, setOptionB] = useState('');
   const [optionC, setOptionC] = useState('');
   const [optionD, setOptionD] = useState('');
+  const [optionE, setOptionE] = useState('');
   const [correctOption, setCorrectOption] = useState<string>('');
 
   // True/False
@@ -50,6 +66,27 @@ const QuestionBank = () => {
   const [rightItemC, setRightItemC] = useState('');
   const [matchingAnswer, setMatchingAnswer] = useState('');
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setImageUrl(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setImageUrl('');
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const resetForm = () => {
     setQuestionText('');
     setEssayAnswer('');
@@ -57,6 +94,7 @@ const QuestionBank = () => {
     setOptionB('');
     setOptionC('');
     setOptionD('');
+    setOptionE('');
     setCorrectOption('');
     setTrueFalseAnswer('');
     setLeftItem1('');
@@ -66,6 +104,7 @@ const QuestionBank = () => {
     setRightItemB('');
     setRightItemC('');
     setMatchingAnswer('');
+    clearImage();
   };
 
   const handleAddQuestion = () => {
@@ -80,6 +119,11 @@ const QuestionBank = () => {
       points,
     };
 
+    // Add image if provided
+    if (imageUrl) {
+      newQuestion.imageUrl = imageUrl;
+    }
+
     // Add type-specific fields
     switch (type) {
       case 'essay':
@@ -87,8 +131,13 @@ const QuestionBank = () => {
         newQuestion.essayAnswer = essayAnswer.trim();
         break;
       case 'multiple_choice':
-        if (!optionA || !optionB || !optionC || !optionD || !correctOption) return;
-        newQuestion.options = [optionA, optionB, optionC, optionD];
+        // At least A, B required, C, D, E are optional
+        if (!optionA || !optionB || !correctOption) return;
+        const options = [optionA, optionB];
+        if (optionC) options.push(optionC);
+        if (optionD) options.push(optionD);
+        if (optionE) options.push(optionE);
+        newQuestion.options = options;
         newQuestion.correctAnswer = correctOption;
         break;
       case 'true_false':
@@ -150,9 +199,9 @@ const QuestionBank = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-white/10 text-white">
-                  {(Object.keys(CATEGORY_LABELS) as QuestionCategory[]).map((cat) => (
+                  {(Object.keys(SIMPLE_CATEGORY_LABELS) as QuestionCategory[]).map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat} - {CATEGORY_LABELS[cat]}
+                      {SIMPLE_CATEGORY_LABELS[cat]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -217,6 +266,88 @@ const QuestionBank = () => {
             />
           </div>
 
+          {/* Image Upload Section */}
+          <div className="space-y-2">
+            <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+              <Image className="w-4 h-4" />
+              Gambar Soal
+            </Label>
+
+            {!imagePreview ? (
+              /* Dropzone Style Upload */
+              <div
+                className="w-full border-2 border-dashed border-slate-600 rounded-2xl bg-slate-800/50 hover:bg-slate-800 hover:border-slate-500 transition-all cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="question-image"
+                />
+                <div className="flex flex-col items-center justify-center py-10 px-6">
+                  {/* Upload Icon */}
+                  <div className="mb-4">
+                    <svg
+                      className="w-10 h-10 text-slate-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Text */}
+                  <p className="text-slate-400 text-sm mb-1">Click the button below to upload</p>
+                  <p className="text-slate-500 text-xs mb-4">Max. File Size: 30MB</p>
+
+                  {/* Browse Button */}
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-2 rounded-full cursor-pointer"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Browse file
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Image Preview */
+              <div className="w-full border-2 border-dashed border-slate-600 rounded-2xl bg-slate-800/50 p-4">
+                <div className="relative w-full flex flex-col items-center">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full max-h-64 object-contain rounded-xl border border-white/10 bg-black/20"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={clearImage}
+                    className="mt-4 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Hapus Gambar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="h-px bg-white/5 my-4" />
 
           {/* Dynamic form based on type */}
@@ -235,17 +366,20 @@ const QuestionBank = () => {
 
             {type === 'multiple_choice' && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {['A', 'B', 'C', 'D'].map((opt, idx) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                  {['A', 'B', 'C', 'D', 'E'].map((opt, idx) => (
                     <div key={opt} className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Pilihan {opt}</Label>
+                      <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                        Pilihan {opt} {idx < 5 ? <span className="text-rose-400">*</span> : <span className="text-slate-500">(opsional)</span>}
+                      </Label>
                       <Input
-                        value={idx === 0 ? optionA : idx === 1 ? optionB : idx === 2 ? optionC : optionD}
+                        value={idx === 0 ? optionA : idx === 1 ? optionB : idx === 2 ? optionC : idx === 3 ? optionD : optionE}
                         onChange={(e) => {
                           if (idx === 0) setOptionA(e.target.value);
                           if (idx === 1) setOptionB(e.target.value);
                           if (idx === 2) setOptionC(e.target.value);
                           if (idx === 3) setOptionD(e.target.value);
+                          if (idx === 4) setOptionE(e.target.value);
                         }}
                         placeholder={`Pilihan ${opt}`}
                         className="bg-slate-800 border-white/10 text-white h-11"
@@ -264,6 +398,7 @@ const QuestionBank = () => {
                       <SelectItem value="B">B</SelectItem>
                       <SelectItem value="C">C</SelectItem>
                       <SelectItem value="D">D</SelectItem>
+                      <SelectItem value="E">E</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -360,6 +495,7 @@ const QuestionBank = () => {
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Kategori</TableHead>
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Tipe</TableHead>
+                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Gambar</TableHead>
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider max-w-[200px]">Pertanyaan</TableHead>
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Jawaban</TableHead>
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-wider text-center">Waktu</TableHead>
@@ -379,6 +515,17 @@ const QuestionBank = () => {
                         <Badge variant="outline" className="bg-white/5 text-slate-300 border-white/10">
                           {TYPE_LABELS[q.type]}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {q.imageUrl ? (
+                          <img
+                            src={q.imageUrl}
+                            alt="Question"
+                            className="w-12 h-12 rounded-lg object-cover border border-white/10"
+                          />
+                        ) : (
+                          <span className="text-slate-500 text-xs">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="max-w-[200px]">
                         <p className="truncate text-slate-300 font-medium">{q.question}</p>
