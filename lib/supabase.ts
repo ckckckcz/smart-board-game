@@ -22,7 +22,7 @@ export interface DbRound {
 export interface DbQuestion {
     id: string;
     category: 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
-    type: 'multiple_choice' | 'true_false' | 'essay' | 'matching';
+    type: 'multiple_choice' | 'true_false' | 'matching';
     question: string;
     image_url: string | null;
     options: string[] | null;

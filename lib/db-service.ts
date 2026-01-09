@@ -51,10 +51,6 @@ function dbQuestionToQuestion(dbQuestion: DbQuestion): Question {
         }
     }
 
-    if (dbQuestion.essay_answer) {
-        question.essayAnswer = dbQuestion.essay_answer;
-    }
-
     if (dbQuestion.matching_pairs) {
         question.matchingPairs = dbQuestion.matching_pairs;
     }
@@ -89,10 +85,6 @@ function questionToDbQuestion(question: Question): Partial<DbQuestion> {
 
     if (question.correctAnswer !== undefined) {
         dbQuestion.correct_answer = String(question.correctAnswer);
-    }
-
-    if (question.essayAnswer) {
-        dbQuestion.essay_answer = question.essayAnswer;
     }
 
     if (question.matchingPairs) {
@@ -236,6 +228,31 @@ export const questionsService = {
         }
 
         return true;
+    },
+
+    async updatePartial(questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>): Promise<Question | null> {
+        const dbUpdates: Record<string, unknown> = {};
+
+        if (updates.timeLimit !== undefined) {
+            dbUpdates.time_limit = updates.timeLimit;
+        }
+        if (updates.points !== undefined) {
+            dbUpdates.points = updates.points;
+        }
+
+        const { data, error } = await supabase
+            .from('questions')
+            .update(dbUpdates)
+            .eq('id', questionId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error updating question:', error);
+            return null;
+        }
+
+        return dbQuestionToQuestion(data);
     },
 
     async uploadImage(file: File): Promise<string | null> {

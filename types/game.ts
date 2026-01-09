@@ -1,6 +1,6 @@
 export type QuestionCategory = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
 
-export type QuestionType = 'multiple_choice' | 'true_false' | 'essay' | 'matching';
+export type QuestionType = 'multiple_choice' | 'true_false' | 'matching';
 
 export interface MatchingPair {
   left: string;
@@ -19,8 +19,6 @@ export interface Question {
   options?: string[];
   // For true/false
   correctAnswer?: string | boolean;
-  // For essay
-  essayAnswer?: string;
   // For matching (3 pairs)
   matchingPairs?: MatchingPair[];
   matchingAnswer?: string; // Format: "1A-2B-3C"

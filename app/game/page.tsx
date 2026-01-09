@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, X, CheckCircle, Trophy, BarChart3 } from 'lucide-react';
+import { User, X, CheckCircle, Lock, Flag, Volume2, VolumeX } from 'lucide-react';
 import { useGameStore } from '@/hooks/useGameStore';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import QuestionPopup from '@/components/game/QuestionPopup';
 import FeedbackBanner from '@/components/game/FeedbackBanner';
 import { Progress } from '@/components/ui/progress';
@@ -16,21 +17,39 @@ export default function GameBoard() {
         currentRound,
         questions,
         currentQuestion,
-        currentQuestionIndex,
         answeredQuestions,
         showFeedback,
+        lastAnswerCorrect,
         gameComplete,
         selectQuestion,
+        endGame,
     } = useGameStore();
 
-    const [showCoinPrompt, setShowCoinPrompt] = useState(true);
-    const [isSpinning, setIsSpinning] = useState(false);
-    const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+    // Get the set function to clear feedback on mount
+    const clearFeedbackOnMount = useCallback(() => {
+        useGameStore.setState({ showFeedback: false, lastAnswerCorrect: null });
+    }, []);
+
+    const {
+        isSoundEnabled,
+        toggleSound,
+        playClickSound,
+        playCorrectSound,
+        playWrongSound,
+        playFinishSound
+    } = useSoundEffects();
+
     const [mounted, setMounted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [prevAnsweredCount, setPrevAnsweredCount] = useState(0);
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        // Clear any leftover feedback from previous session
+        clearFeedbackOnMount();
+        // Initialize prevAnsweredCount to current state to prevent sound on mount
+        setPrevAnsweredCount(Object.keys(answeredQuestions).length);
+    }, [clearFeedbackOnMount]);
 
     useEffect(() => {
         if (!player || !currentRound) {
@@ -44,47 +63,68 @@ export default function GameBoard() {
         }
     }, [gameComplete, router]);
 
-    const handleCoinClick = useCallback(() => {
-        if (currentQuestion || showFeedback || isSpinning) return;
+    // Play sound when answer changes (correct/wrong)
+    useEffect(() => {
+        const currentAnsweredCount = Object.keys(answeredQuestions).length;
 
-        const unansweredIndices = questions
-            .map((q, idx) => ({ q, idx }))
-            .filter(({ q }) => !answeredQuestions[q.id])
-            .map(({ idx }) => idx);
-
-        if (unansweredIndices.length === 0) return;
-
-        setIsSpinning(true);
-        setShowCoinPrompt(false);
-
-        let spinCount = 0;
-        const maxSpins = 15 + Math.floor(Math.random() * 10);
-
-        const spinInterval = setInterval(() => {
-            const randomIdx = unansweredIndices[Math.floor(Math.random() * unansweredIndices.length)];
-            setSelectedQuestionIndex(randomIdx);
-            spinCount++;
-
-            if (spinCount >= maxSpins) {
-                clearInterval(spinInterval);
-                const finalIdx = unansweredIndices[Math.floor(Math.random() * unansweredIndices.length)];
-                setSelectedQuestionIndex(finalIdx);
-
-                setTimeout(() => {
-                    setIsSpinning(false);
-                    const question = questions[finalIdx];
-                    if (question) {
-                        selectQuestion(question.id);
-                    }
-                }, 500);
+        // Only play if answers increased (new answer submitted)
+        if (currentAnsweredCount > prevAnsweredCount && showFeedback) {
+            if (lastAnswerCorrect === true) {
+                playCorrectSound();
+            } else if (lastAnswerCorrect === false) {
+                playWrongSound();
             }
-        }, 100);
-    }, [currentQuestion, showFeedback, isSpinning, questions, answeredQuestions, selectQuestion]);
+        }
+
+        setPrevAnsweredCount(currentAnsweredCount);
+    }, [answeredQuestions, showFeedback, lastAnswerCorrect, prevAnsweredCount, playCorrectSound, playWrongSound]);
+
+    // Handle tile click - siswa harus mengerjakan secara urut
+    const handleTileClick = useCallback((index: number) => {
+        if (currentQuestion || showFeedback) return;
+
+        const question = questions[index];
+        if (!question) return;
+
+        // Cek apakah soal ini sudah dijawab
+        if (answeredQuestions[question.id]) return;
+
+        // Cek apakah soal sebelumnya sudah dijawab (harus urut)
+        if (index > 0) {
+            const prevQuestion = questions[index - 1];
+            if (!answeredQuestions[prevQuestion.id]) {
+                // Soal sebelumnya belum dijawab, tidak bisa lanjut
+                return;
+            }
+        }
+
+        // Play click sound
+        playClickSound();
+        selectQuestion(question.id);
+    }, [currentQuestion, showFeedback, questions, answeredQuestions, selectQuestion, playClickSound]);
+
+    // Handle selesai - simpan ke Supabase dan navigasi ke results
+    const handleFinish = useCallback(async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+
+        // Play finish sound
+        playFinishSound();
+
+        try {
+            await endGame();
+            // Navigasi akan dilakukan otomatis melalui useEffect ketika gameComplete = true
+        } catch (error) {
+            console.error('Error finishing game:', error);
+            setIsSubmitting(false);
+        }
+    }, [isSubmitting, endGame, playFinishSound]);
 
     if (!player || !currentRound) return null;
 
     const answeredCount = Object.keys(answeredQuestions).length;
-    const progress = (answeredCount / questions.length) * 100;
+    const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
+    const allAnswered = answeredCount === questions.length && questions.length > 0;
 
     return (
         <div className={styles.container}>
@@ -105,18 +145,44 @@ export default function GameBoard() {
                     </div>
                 </div>
 
-                <div className={styles.statsRow}>
-                    <div className={styles.statItem}>
-                        <div className={styles.statLabel} style={{ color: '#4caf50' }}>Benar</div>
-                        <div className={styles.statValue}>{player.correctAnswers}</div>
-                    </div>
-                    <div className={styles.statItem}>
-                        <div className={styles.statLabel} style={{ color: '#f44336' }}>Salah</div>
-                        <div className={styles.statValue}>{player.wrongAnswers}</div>
-                    </div>
-                    <div className={styles.statItem}>
-                        <div className={styles.statLabel} style={{ color: '#ff9800' }}>Skor</div>
-                        <div className={styles.statValue}>{player.score}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {/* Sound Toggle Button */}
+                    <button
+                        onClick={toggleSound}
+                        style={{
+                            background: isSoundEnabled ? '#4caf50' : '#9e9e9e',
+                            border: '3px solid var(--border)',
+                            borderRadius: '15px',
+                            padding: '0.6rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease',
+                            boxShadow: isSoundEnabled ? '0 4px 0 #388e3c' : '0 4px 0 #757575'
+                        }}
+                        title={isSoundEnabled ? 'Matikan Suara' : 'Hidupkan Suara'}
+                    >
+                        {isSoundEnabled ? (
+                            <Volume2 className="w-5 h-5 text-white" />
+                        ) : (
+                            <VolumeX className="w-5 h-5 text-white" />
+                        )}
+                    </button>
+
+                    <div className={styles.statsRow}>
+                        <div className={styles.statItem}>
+                            <div className={styles.statLabel} style={{ color: '#4caf50' }}>Benar</div>
+                            <div className={styles.statValue}>{player.correctAnswers}</div>
+                        </div>
+                        <div className={styles.statItem}>
+                            <div className={styles.statLabel} style={{ color: '#f44336' }}>Salah</div>
+                            <div className={styles.statValue}>{player.wrongAnswers}</div>
+                        </div>
+                        <div className={styles.statItem}>
+                            <div className={styles.statLabel} style={{ color: '#ff9800' }}>Skor</div>
+                            <div className={styles.statValue}>{player.score}</div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -132,65 +198,111 @@ export default function GameBoard() {
                     <Progress value={progress} className="h-4 rounded-full bg-white border-2 border-border overflow-hidden [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-cyan-400" />
                 </div>
 
+                {/* Instruction */}
+                {!currentQuestion && !showFeedback && !allAnswered && (
+                    <div style={{
+                        textAlign: 'center',
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                        borderRadius: '15px',
+                        border: '2px solid #90caf9'
+                    }}>
+                        <p style={{ fontWeight: 900, fontSize: '1.1rem', color: '#01579b', margin: 0 }}>
+                            📝 Klik nomor soal secara urut untuk mengerjakan!
+                        </p>
+                    </div>
+                )}
+
                 {/* Tiles Grid */}
                 <div className={styles.tileGrid}>
                     {questions.map((q, index) => {
                         const answerResult = answeredQuestions[q.id];
-                        const isHighlighted = selectedQuestionIndex === index && isSpinning;
+                        const isAnswered = !!answerResult;
 
-                        const tileColor = '#8FD9FB';
+                        // Determine if this tile is clickable (current or already answered)
+                        const prevAnswered = index === 0 || !!answeredQuestions[questions[index - 1]?.id];
+                        const isClickable = !isAnswered && prevAnswered && !currentQuestion && !showFeedback;
+                        const isLocked = !isAnswered && !prevAnswered;
+                        const isNext = !isAnswered && prevAnswered;
+
+                        // Colors
+                        let tileColor = '#8FD9FB'; // default blue
+                        let tileShadow = '0 8px 0 #78c1e0';
+
+                        if (isLocked) {
+                            tileColor = '#e0e0e0';
+                            tileShadow = '0 8px 0 #bdbdbd';
+                        } else if (isNext) {
+                            tileColor = '#4fc3f7';
+                            tileShadow = '0 8px 0 #29b6f6';
+                        }
 
                         return (
                             <div
                                 key={q.id}
+                                onClick={() => isClickable && handleTileClick(index)}
                                 className={`
                                     ${styles.tile}
                                     ${answerResult === 'correct' ? styles.tileCorrect : ''}
                                     ${answerResult === 'wrong' ? styles.tileWrong : ''}
-                                    ${isHighlighted ? styles.tileActive : ''}
+                                    ${isNext && !isAnswered ? styles.tileActive : ''}
                                 `}
                                 style={{
-                                    backgroundColor: (!answerResult && !isHighlighted) ? tileColor : undefined,
-                                    color: (!answerResult && !isHighlighted) ? '#1e293b' : undefined,
-                                    borderColor: (!answerResult && !isHighlighted) ? 'rgba(0,0,0,0.1)' : undefined,
-                                    opacity: answerResult ? 0.5 : 1,
-                                    pointerEvents: answerResult ? 'none' : 'auto',
-                                    cursor: answerResult ? 'default' : 'pointer',
-                                    boxShadow: (!answerResult && !isHighlighted) ? '0 8px 0 #78c1e0' : undefined
+                                    backgroundColor: (!isAnswered) ? tileColor : undefined,
+                                    color: (!isAnswered) ? '#1e293b' : undefined,
+                                    borderColor: (!isAnswered) ? 'rgba(0,0,0,0.1)' : undefined,
+                                    opacity: isAnswered ? 0.6 : isLocked ? 0.5 : 1,
+                                    pointerEvents: isClickable ? 'auto' : 'none',
+                                    cursor: isClickable ? 'pointer' : 'default',
+                                    boxShadow: (!isAnswered) ? tileShadow : undefined,
+                                    transform: isNext && !currentQuestion && !showFeedback ? 'scale(1.05)' : undefined,
+                                    transition: 'all 0.3s ease'
                                 }}
                             >
                                 <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>{q.category}</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>#{index + 1}</div>
-                                {answerResult === 'correct' && <CheckCircle className="absolute w-12 h-12 opacity-40 text-white" />}
-                                {answerResult === 'wrong' && <X className="absolute w-12 h-12 opacity-40 text-white" />}
+                                <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{index + 1}</div>
+                                {isAnswered && answerResult === 'correct' && <CheckCircle className="absolute w-12 h-12 opacity-40 text-white" />}
+                                {isAnswered && answerResult === 'wrong' && <X className="absolute w-12 h-12 opacity-40 text-white" />}
+                                {isLocked && <Lock className="absolute w-8 h-8 opacity-30 text-gray-600" />}
                             </div>
                         );
                     })}
                 </div>
 
                 {/* Action Area */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', minHeight: '180px' }}>
-                    {!currentQuestion && !showFeedback && (
-                        <>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', minHeight: '100px', marginTop: '1.5rem' }}>
+                    {/* Show Finish Button when all answered */}
+                    {allAnswered && !currentQuestion && !showFeedback && (
+                        <div style={{ textAlign: 'center', width: '100%' }}>
+                            <div style={{
+                                marginBottom: '1rem',
+                                padding: '1rem',
+                                background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+                                borderRadius: '15px',
+                                border: '2px solid #81c784'
+                            }}>
+                                <p style={{ fontWeight: 900, fontSize: '1.2rem', color: '#2e7d32', margin: 0 }}>
+                                    🎉 Semua soal sudah dijawab!
+                                </p>
+                            </div>
                             <button
-                                onClick={handleCoinClick}
-                                disabled={isSpinning}
+                                onClick={handleFinish}
+                                disabled={isSubmitting}
                                 className={styles.btn}
-                                style={{ width: '100px', height: '100px', borderRadius: '50%', fontSize: '1.5rem' }}
+                                style={{
+                                    width: '100%',
+                                    maxWidth: '400px',
+                                    height: '70px',
+                                    fontSize: '1.5rem',
+                                    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                                    boxShadow: '0 8px 0 #388e3c'
+                                }}
                             >
-                                <Trophy className="w-10 h-10" />
+                                <Flag className="w-8 h-8 mr-3" />
+                                {isSubmitting ? 'MENYIMPAN...' : 'SELESAI'}
                             </button>
-                            {showCoinPrompt && !isSpinning && (
-                                <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#01579b', animation: 'bounce 1s infinite' }}>
-                                    KLIK UNTUK ACAK SOAL!
-                                </div>
-                            )}
-                            {isSpinning && (
-                                <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0288d1' }}>
-                                    MENGUNDI...
-                                </div>
-                            )}
-                        </>
+                        </div>
                     )}
 
                     {showFeedback && (
@@ -207,13 +319,7 @@ export default function GameBoard() {
 
             {/* Question Popup */}
             {currentQuestion && !showFeedback && <QuestionPopup />}
-
-            <style jsx>{`
-                @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
-                }
-            `}</style>
         </div>
     );
 }
+

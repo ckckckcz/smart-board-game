@@ -86,9 +86,14 @@ const RoundManager = () => {
                   >
                     -
                   </button>
-                  <span className="flex-1 text-center font-bold text-xl text-slate-900 font-mono">
-                    {questionCounts[category]}
-                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="99"
+                    value={questionCounts[category]}
+                    onChange={(e) => updateCount(category, parseInt(e.target.value) || 0)}
+                    className="flex-1 text-center font-bold text-xl text-slate-900 font-mono bg-white border border-slate-200 rounded-lg h-8 w-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] + 1)}

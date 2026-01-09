@@ -31,6 +31,7 @@ interface GameStore extends GameState {
   deleteRound: (roundId: string) => Promise<void>;
   addQuestion: (question: Question) => Promise<void>;
   deleteQuestion: (questionId: string) => Promise<void>;
+  updateQuestion: (questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>) => Promise<void>;
   clearLeaderboard: () => Promise<void>;
   refreshLeaderboard: () => Promise<void>;
 }
@@ -123,27 +124,31 @@ export const useGameStore = create<GameStore>()(
         if (!currentRound) return;
 
         // Select questions based on round configuration
+        // Soal akan disusun urut berdasarkan kategori C1→C6
         const selectedQuestions: Question[] = [];
         const categories: QuestionCategory[] = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
 
         categories.forEach(category => {
           const count = currentRound.questionCounts[category];
           const categoryQuestions = allQuestions.filter(q => q.category === category);
+          // Shuffle dalam kategori untuk variasi, tapi urutan kategori tetap
           const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
           selectedQuestions.push(...shuffled.slice(0, count));
         });
 
-        // Shuffle all selected questions for random order
-        const shuffledQuestions = selectedQuestions.sort(() => Math.random() - 0.5);
-
+        // Tidak melakukan shuffle final - soal tetap urut C1→C6
         set({
-          questions: shuffledQuestions,
+          questions: selectedQuestions,
           answeredQuestions: {},
           isPlaying: true,
           currentQuestionIndex: 0,
           gameComplete: false,
+          showFeedback: false,
+          lastAnswerCorrect: null,
+          currentQuestion: null,
         });
       },
+
 
       selectQuestion: (questionId: string) => {
         const { questions } = get();
@@ -167,15 +172,19 @@ export const useGameStore = create<GameStore>()(
           case 'multiple_choice':
             isCorrect = answer === currentQuestion.correctAnswer;
             break;
-          case 'essay':
-            // For essay, compare strings (case insensitive, trimmed)
-            isCorrect = String(answer).toLowerCase().trim() ===
-              String(currentQuestion.essayAnswer || '').toLowerCase().trim();
-            break;
           case 'matching':
-            // For matching, compare the answer string
-            isCorrect = String(answer).toUpperCase().replace(/\s/g, '') ===
-              String(currentQuestion.matchingAnswer || '').toUpperCase().replace(/\s/g, '');
+            // For matching, compare the pairs regardless of order
+            // e.g., "1A-2C-3B" should match "2C-1A-3B"
+            const studentAnswer = String(answer).toUpperCase().replace(/\s/g, '');
+            const correctAnswer = String(currentQuestion.matchingAnswer || '').toUpperCase().replace(/\s/g, '');
+
+            // Parse pairs from answer strings (e.g., "1A-2C-3B" -> ["1A", "2C", "3B"])
+            const studentPairs = studentAnswer.split('-').filter(Boolean).sort();
+            const correctPairs = correctAnswer.split('-').filter(Boolean).sort();
+
+            // Compare sorted pairs - order doesn't matter, only the pairs themselves
+            isCorrect = studentPairs.length === correctPairs.length &&
+              studentPairs.every((pair, index) => pair === correctPairs[index]);
             break;
         }
 
@@ -371,6 +380,29 @@ export const useGameStore = create<GameStore>()(
           console.log('✅ Question deleted from Supabase');
         } catch (error) {
           console.error('❌ Failed to delete question from Supabase:', error);
+        }
+      },
+
+      updateQuestion: async (questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>) => {
+        // Optimistic update
+        set({
+          allQuestions: get().allQuestions.map(q =>
+            q.id === questionId ? { ...q, ...updates } : q
+          ),
+        });
+
+        try {
+          const updatedQuestion = await questionsService.updatePartial(questionId, updates);
+          if (updatedQuestion) {
+            console.log('✅ Question updated in Supabase:', questionId);
+            set({
+              allQuestions: get().allQuestions.map(q =>
+                q.id === questionId ? updatedQuestion : q
+              ),
+            });
+          }
+        } catch (error) {
+          console.error('❌ Failed to update question in Supabase:', error);
         }
       },
 

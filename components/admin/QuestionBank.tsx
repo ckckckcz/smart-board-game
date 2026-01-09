@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, BookOpen, Clock, AlertCircle, Image, X, Check, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, BookOpen, Clock, AlertCircle, Image, X, Check, ArrowRight, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,7 +15,6 @@ import { Question, QuestionCategory, QuestionType, MatchingPair } from '@/types/
 import { CATEGORY_COLORS } from '@/data/mockData';
 
 const TYPE_LABELS: Record<QuestionType, string> = {
-  essay: 'Essay',
   multiple_choice: 'Pilihan Ganda',
   true_false: 'Benar/Salah',
   matching: 'Menjodohkan',
@@ -32,9 +31,12 @@ const SIMPLE_CATEGORY_LABELS: Record<QuestionCategory, string> = {
 };
 
 const QuestionBank = () => {
-  const { allQuestions, addQuestion, deleteQuestion } = useGameStore();
+  const { allQuestions, addQuestion, deleteQuestion, updateQuestion } = useGameStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTimeValue, setEditTimeValue] = useState<string>('');
+  const [editPointsValue, setEditPointsValue] = useState<string>('');
   const [category, setCategory] = useState<QuestionCategory>('C1');
-  const [type, setType] = useState<QuestionType>('essay');
+  const [type, setType] = useState<QuestionType>('multiple_choice');
   const [questionText, setQuestionText] = useState('');
   const [timeLimit, setTimeLimit] = useState(3);
   const [points, setPoints] = useState(100);
@@ -43,8 +45,7 @@ const QuestionBank = () => {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Essay
-  const [essayAnswer, setEssayAnswer] = useState('');
+  // Multiple Choice (A-E) - moved comment below
 
   // Multiple Choice (A-E)
   const [optionA, setOptionA] = useState('');
@@ -133,7 +134,6 @@ const QuestionBank = () => {
 
   const resetForm = () => {
     setQuestionText('');
-    setEssayAnswer('');
     setOptionA('');
     setOptionB('');
     setOptionC('');
@@ -177,13 +177,7 @@ const QuestionBank = () => {
 
     // Add type-specific fields
     switch (type) {
-      case 'essay':
-        if (!essayAnswer.trim()) {
-          toast.error('Kunci jawaban essay wajib diisi!');
-          return;
-        }
-        newQuestion.essayAnswer = essayAnswer.trim();
-        break;
+
       case 'multiple_choice':
         if (!optionA || !optionB || !correctOption) {
           toast.error('Lengkapi pilihan A & B serta tentukan jawaban benar!');
@@ -240,10 +234,8 @@ const QuestionBank = () => {
 
   const renderAnswerDisplay = (q: Question) => {
     switch (q.type) {
-      case 'essay':
-        return <span className="text-sm text-slate-600 font-medium">{q.essayAnswer || '-'}</span>;
       case 'multiple_choice':
-        return <span className="text-sm text-slate-600 font-medium">{String(q.correctAnswer) || '-'}</span>;
+        return <span className="text-base text-slate-900 font-bold">{String(q.correctAnswer) || '-'}</span>;
       case 'true_false':
         return q.correctAnswer
           ? <span className="text-sm font-bold text-emerald-600">Benar</span>
@@ -341,7 +333,7 @@ const QuestionBank = () => {
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
               placeholder="Tulis pertanyaan di sini..."
-              className="min-h-[100px] resize-none bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 text-lg"
+              className="min-h-[120px] resize-none bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 text-xl font-bold"
             />
           </div>
 
@@ -400,17 +392,7 @@ const QuestionBank = () => {
 
           {/* Dynamic form based on type */}
           <div className="bg-slate-50 rounded-2xl p-6 border border-border">
-            {type === 'essay' && (
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kunci Jawaban</Label>
-                <Input
-                  value={essayAnswer}
-                  onChange={(e) => setEssayAnswer(e.target.value)}
-                  placeholder="Jawaban essay..."
-                  className="bg-white border border-slate-200 text-slate-900 h-11"
-                />
-              </div>
-            )}
+
 
             {type === 'multiple_choice' && (
               <>
@@ -622,7 +604,6 @@ const QuestionBank = () => {
             <BookOpen className="w-5 h-5 text-blue-500" />
             <h3 className="text-lg font-bold text-slate-900">Daftar Soal ({allQuestions.length})</h3>
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Urut Berdasarkan Kategori (C1-C6)</p>
         </div>
 
         <div className="p-0">
@@ -682,27 +663,108 @@ const QuestionBank = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="max-w-[200px]">
-                          <p className="truncate text-slate-600 font-medium">{q.question}</p>
+                        <TableCell className="max-w-[300px]">
+                          <div className="group relative">
+                            <p className="truncate text-slate-900 font-bold text-base cursor-help">{q.question}</p>
+                            {/* Tooltip - appears on hover */}
+                            <div className="absolute left-0 top-full mt-2 z-50 hidden group-hover:block w-[400px] max-w-[90vw]">
+                              <div className="bg-slate-900 text-white text-sm p-4 rounded-xl shadow-2xl border border-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+                                <div className="absolute -top-2 left-4 w-4 h-4 bg-slate-900 border-l border-t border-slate-700 transform rotate-45"></div>
+                                {q.question}
+                              </div>
+                            </div>
+                          </div>
                         </TableCell>
                         <TableCell>
                           {renderAnswerDisplay(q)}
                         </TableCell>
-                        <TableCell className="text-center text-slate-500">
-                          {Math.round(q.timeLimit / 60)}m
-                        </TableCell>
-                        <TableCell className="text-center font-bold text-amber-600">
-                          {q.points}
+                        <TableCell className="text-center">
+                          {editingId === q.id ? (
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={editTimeValue}
+                              onChange={(e) => setEditTimeValue(e.target.value.replace(/[^0-9]/g, ''))}
+                              className="w-14 h-8 text-center text-sm font-bold border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="menit"
+                            />
+                          ) : (
+                            <span className="text-slate-500">{Math.round(q.timeLimit / 60)}m</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            onClick={() => deleteQuestion(q.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {editingId === q.id ? (
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={editPointsValue}
+                              onChange={(e) => setEditPointsValue(e.target.value.replace(/[^0-9]/g, ''))}
+                              className="w-16 h-8 text-center text-sm font-bold border border-amber-400 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              placeholder="poin"
+                            />
+                          ) : (
+                            <span className="font-bold text-amber-600">{q.points}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {editingId === q.id ? (
+                              <>
+                                <Button
+                                  onClick={() => {
+                                    const newTime = parseInt(editTimeValue) || Math.round(q.timeLimit / 60);
+                                    const newPoints = parseInt(editPointsValue) || q.points;
+                                    updateQuestion(q.id, {
+                                      timeLimit: newTime * 60,
+                                      points: newPoints
+                                    });
+                                    setEditingId(null);
+                                    toast.success('Soal berhasil diperbarui!');
+                                  }}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50 cursor-pointer"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => setEditingId(null)}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 cursor-pointer"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={() => {
+                                    setEditingId(q.id);
+                                    setEditTimeValue(String(Math.round(q.timeLimit / 60)));
+                                    setEditPointsValue(String(q.points));
+                                  }}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 cursor-pointer"
+                                  title="Edit Waktu & Poin"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => deleteQuestion(q.id)}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer"
+                                  title="Hapus Soal"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
