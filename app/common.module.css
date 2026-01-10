@@ -65,6 +65,18 @@
   z-index: 20;
 }
 
+/* Sound Icon Responsive Positioning */
+.soundIcon {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 130px;
+  height: auto;
+  z-index: 100;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 /* Glass Card */
 .glassCard {
   position: relative;
@@ -370,6 +382,12 @@
     padding: 0.75rem 2rem;
     border-radius: 20px;
   }
+
+  .soundIcon {
+    width: 100px;
+    top: 0.8rem;
+    left: 0.8rem;
+  }
 }
 
 /* Tablet - Medium screens */
@@ -395,6 +413,14 @@
 
   .tile {
     border-radius: 20px;
+  }
+
+  .soundIcon {
+    width: 100px;
+    top: auto;
+    bottom: 2rem;
+    left: 1rem;
+    z-index: 110;
   }
 }
 
@@ -492,6 +518,14 @@
 
   .birdsRight {
     width: 40px;
+  }
+
+  .soundIcon {
+    width: 70px;
+    top: auto;
+    bottom: 1.5rem;
+    left: 0.5rem;
+    z-index: 110;
   }
 }
 

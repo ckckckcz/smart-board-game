@@ -43,61 +43,61 @@ const RoundManager = () => {
   const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="space-y-8 animate-scale-in">
+    <div className="space-y-4 sm:space-y-6 animate-scale-in">
       {/* Add Round Form */}
-      <div className="bg-white border border-border rounded-3xl shadow-sm p-6 md:p-8">
-        <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-blue-500 rounded-full" />
+      <div className="bg-white border border-border rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-5">
+        <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
+          <span className="w-1 h-4 sm:h-5 bg-blue-500 rounded-full" />
           Buat Babak Baru
         </h3>
 
         {/* Round Name */}
-        <div className="mb-6">
-          <label className="text-sm font-bold text-slate-600 mb-2 block tracking-wide">
+        <div className="mb-3 sm:mb-4">
+          <label className="text-xs sm:text-sm font-bold text-slate-600 mb-1.5 block">
             Nama Babak
           </label>
           <Input
             value={roundName}
             onChange={(e) => setRoundName(e.target.value)}
             placeholder="Contoh: Babak 1 - Dasar Akuntansi"
-            className="h-12 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 transition-all"
+            className="h-9 sm:h-10 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 transition-all text-sm"
           />
         </div>
 
         {/* Question Counts per Category */}
-        <div className="mb-8 bg-white border border-border rounded-3xl shadow-sm p-6 md:p-8">
-          <label className="text-sm font-bold text-slate-600 mb-3 block tracking-wide">
+        <div className="mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg p-2.5 sm:p-3">
+          <label className="text-xs font-bold text-slate-600 mb-2 block">
             Konfigurasi Soal
           </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2">
             {(Object.keys(CATEGORY_LABELS) as QuestionCategory[]).map((category) => (
               <div
                 key={category}
-                className="bg-slate-50 border border-border rounded-xl p-3 hover:border-slate-300 transition-colors"
+                className="bg-white border border-slate-200 rounded-lg p-2"
               >
-                <label className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-2 block text-start truncate">
+                <label className="text-[10px] text-blue-600 font-bold uppercase mb-1 block text-center">
                   {category}
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-1">
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] - 1)}
-                    className="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center font-bold text-slate-900 transition-colors cursor-pointer"
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700 text-sm transition-colors cursor-pointer"
                   >
                     -
                   </button>
                   <input
-                    type="number"
-                    min="0"
-                    max="99"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={questionCounts[category]}
-                    onChange={(e) => updateCount(category, parseInt(e.target.value) || 0)}
-                    className="flex-1 text-center font-bold text-xl text-slate-900 font-mono bg-white border border-slate-200 rounded-lg h-8 w-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onChange={(e) => updateCount(category, parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+                    className="w-8 sm:w-10 h-6 sm:h-7 text-center font-bold text-base sm:text-lg text-slate-900 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <button
                     type="button"
                     onClick={() => updateCount(category, questionCounts[category] + 1)}
-                    className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 flex items-center justify-center font-bold text-white transition-colors cursor-pointer"
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded bg-blue-600 hover:bg-blue-500 flex items-center justify-center font-bold text-white text-sm transition-colors cursor-pointer"
                   >
                     +
                   </button>
@@ -108,59 +108,57 @@ const RoundManager = () => {
         </div>
 
         {/* Total & Add Button */}
-        <div className="flex items-center justify-between pt-6 border-t border-border">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-200 gap-2">
           <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">Total Soal</span>
-            <span className="text-2xl font-black text-slate-900">{totalQuestions}</span>
+            <span className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase">Total Soal</span>
+            <span className="text-lg sm:text-xl font-black text-slate-900">{totalQuestions}</span>
           </div>
           <Button
             onClick={handleAddRound}
             disabled={!roundName.trim() || totalQuestions === 0}
-            className="h-12 px-6 font-bold rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02]"
+            className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm font-bold rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4 mr-1" />
             Simpan Babak
           </Button>
         </div>
       </div>
 
       {/* Rounds List */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 px-1">
-          <Layers className="w-5 h-5 text-blue-500" />
+      <div className="space-y-2 sm:space-y-3">
+        <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 px-1">
+          <Layers className="w-4 h-4 text-blue-500" />
           Daftar Babak ({rounds.length})
         </h3>
 
         {rounds.length === 0 ? (
-          <div className="bg-white border border-border border-dashed rounded-2xl p-12 text-center text-slate-400">
+          <div className="bg-white border border-border border-dashed rounded-lg p-6 sm:p-8 text-center text-slate-400 text-xs sm:text-sm">
             Belum ada babak yang dibuat.
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="space-y-1.5 sm:space-y-2">
             {rounds.map((round) => (
               <div
                 key={round.id}
-                className="bg-white border border-border rounded-2xl p-5 flex items-start justify-between gap-4 hover:bg-slate-50 transition-colors group shadow-sm"
+                className="bg-white border border-border rounded-lg p-2.5 sm:p-3 flex items-start justify-between gap-2 hover:bg-slate-50 transition-colors group shadow-sm"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">{round.name}</h4>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-border">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 transition-colors truncate">{round.name}</h4>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-blue-100 text-blue-700 shrink-0">
                       {round.totalQuestions} Soal
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1">
                     {(Object.keys(round.questionCounts) as QuestionCategory[]).map((cat) => (
                       round.questionCounts[cat] > 0 && (
-                        <div
+                        <span
                           key={cat}
-                          className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-md border border-border"
+                          className="text-[9px] sm:text-[10px] px-1 py-0.5 bg-slate-100 rounded text-slate-600 font-medium"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                          <span className="text-xs text-slate-500">{cat}</span>
-                          <span className="text-xs font-bold text-slate-900 ml-0.5">{round.questionCounts[cat]}</span>
-                        </div>
+                          {cat}: {round.questionCounts[cat]}
+                        </span>
                       )
                     ))}
                   </div>
@@ -169,9 +167,9 @@ const RoundManager = () => {
                   onClick={() => deleteRound(round.id)}
                   variant="ghost"
                   size="icon"
-                  className="w-10 h-10 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 cursor-pointer transition-colors shrink-0"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
               </div>
             ))}

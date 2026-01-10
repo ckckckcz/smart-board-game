@@ -34,6 +34,7 @@ interface GameStore extends GameState {
   updateQuestion: (questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>) => Promise<void>;
   clearLeaderboard: () => Promise<void>;
   refreshLeaderboard: () => Promise<void>;
+  toggleSound: () => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -50,6 +51,7 @@ export const useGameStore = create<GameStore>()(
       showFeedback: false,
       lastAnswerCorrect: null,
       gameComplete: false,
+      isSoundEnabled: true,
 
       // Data stores
       rounds: [],
@@ -427,6 +429,10 @@ export const useGameStore = create<GameStore>()(
           console.error('❌ Failed to refresh leaderboard:', error);
         }
       },
+
+      toggleSound: () => {
+        set((state) => ({ isSoundEnabled: !state.isSoundEnabled }));
+      },
     }),
     {
       name: 'smart-shoot-game',
@@ -436,6 +442,7 @@ export const useGameStore = create<GameStore>()(
         allQuestions: state.allQuestions,
         leaderboard: state.leaderboard,
         adminPin: state.adminPin,
+        isSoundEnabled: state.isSoundEnabled,
       }),
     }
   )

@@ -235,6 +235,17 @@ select.input {
   z-index: 20;
 }
 
+.soundIcon {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 130px;
+  height: auto;
+  z-index: 100;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 /* Responsive Overrides */
 @media (max-width: 1280px) {
   .building {
@@ -269,6 +280,13 @@ select.input {
     width: 25%;
     bottom: 60px;
   }
+  .soundIcon {
+    width: 100px;
+    top: auto;
+    bottom: 2rem;
+    left: 1rem;
+    z-index: 110;
+  }
 }
 
 @media (max-width: 768px) {
@@ -302,5 +320,12 @@ select.input {
   }
   .street {
     height: 60px;
+  }
+  .soundIcon {
+    width: 70px;
+    top: auto;
+    bottom: 1.5rem;
+    left: 0.5rem;
+    z-index: 110;
   }
 }

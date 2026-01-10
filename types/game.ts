@@ -54,6 +54,7 @@ export interface GameState {
   showFeedback: boolean;
   lastAnswerCorrect: boolean | null;
   gameComplete: boolean;
+  isSoundEnabled: boolean;
 }
 
 export interface AdminSettings {

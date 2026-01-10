@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useGameStore } from '@/hooks/useGameStore';
 import { useInitializeGame } from '@/hooks/useInitializeGame';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import styles from './landing.module.css';
 
 export default function StartScreen() {
   const router = useRouter();
   const { rounds, setPlayer, selectRound, startGame } = useGameStore();
   const { isInitialized, isLoading } = useInitializeGame();
+  const { isSoundEnabled, toggleSound } = useSoundEffects();
 
   const [playerName, setPlayerName] = useState('');
   const [selectedRoundId, setSelectedRoundId] = useState('');
@@ -43,6 +45,18 @@ export default function StartScreen() {
 
   return (
     <div className={styles.container}>
+      {/* Sound Icon Top Left */}
+      <img
+        src="/assets/sound.png"
+        alt="Sound"
+        onClick={toggleSound}
+        className={styles.soundIcon}
+        style={{
+          filter: isSoundEnabled ? 'none' : 'grayscale(100%) brightness(0.8)',
+          transition: 'all 0.3s ease'
+        }}
+      />
+
       {/* Background Layers */}
       <img
         src="/assets/background-city-removebg-preview.png"
@@ -116,7 +130,7 @@ export default function StartScreen() {
 
       {/* Decoration Assets */}
       <img
-        src="/assets/man-woman-removebg-preview.png"
+        src="/assets/revisi-2.png"
         alt="Characters"
         className={styles.peopleLeft}
       />

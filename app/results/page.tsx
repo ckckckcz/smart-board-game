@@ -54,55 +54,74 @@ export default function ResultsPage() {
             <ConfettiAnimation />
             <img src="/assets/background-city-removebg-preview.png" alt="" className={styles.bgCity} />
 
-            <main className={styles.glassCard} style={{ marginTop: '4rem', textAlign: 'center' }}>
-                <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1rem' }}>
-                    <Trophy className="w-24 h-24 text-amber-500" />
+            <main className={`${styles.glassCard} mt-8 sm:mt-16 mx-auto text-center px-4 sm:px-8`}>
+                <div className="relative inline-block mb-4 sm:mb-6">
+                    <Trophy className="w-16 h-16 sm:w-24 sm:h-24 text-amber-500" />
                 </div>
 
-                <h1 style={{ fontSize: '3rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.5rem' }}>HASIL SKOR</h1>
-                <p style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0288d1', marginBottom: '2rem' }}>BABAK: {currentRound?.name}</p>
+                <h1 className="text-3xl sm:text-5xl font-black text-slate-800 mb-1 leading-tight">HASIL SKOR</h1>
+                <p className="text-base sm:text-xl font-extrabold text-blue-600 mb-6 sm:mb-8 uppercase tracking-wide">
+                    BABAK: {currentRound?.name}
+                </p>
 
                 {/* Stats Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-                    <div style={{ background: '#e8f5e9', border: '3px solid #4caf50', borderRadius: '20px', padding: '1.5rem' }}>
-                        <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-                        <div style={{ fontSize: '2rem', fontWeight: 900 }}>{player.correctAnswers}</div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase' }}>Benar</div>
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="bg-emerald-50 border-2 sm:border-[3px] border-emerald-500 rounded-2xl p-2 sm:p-6 flex flex-col items-center">
+                        <CheckCircle className="w-5 h-5 sm:w-8 sm:h-8 text-emerald-600 mb-1 sm:mb-2" />
+                        <div className="text-xl sm:text-3xl font-black">{player.correctAnswers}</div>
+                        <div className="text-[10px] sm:text-xs font-black uppercase text-emerald-700">Benar</div>
                     </div>
-                    <div style={{ background: '#ffebee', border: '3px solid #f44336', borderRadius: '20px', padding: '1.5rem' }}>
-                        <XCircle className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-                        <div style={{ fontSize: '2rem', fontWeight: 900 }}>{player.wrongAnswers}</div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase' }}>Salah</div>
+                    <div className="bg-rose-50 border-2 sm:border-[3px] border-rose-500 rounded-2xl p-2 sm:p-6 flex flex-col items-center">
+                        <XCircle className="w-5 h-5 sm:w-8 sm:h-8 text-rose-600 mb-1 sm:mb-2" />
+                        <div className="text-xl sm:text-3xl font-black">{player.wrongAnswers}</div>
+                        <div className="text-[10px] sm:text-xs font-black uppercase text-rose-700">Salah</div>
                     </div>
-                    <div style={{ background: '#fff8e1', border: '3px solid #ff9800', borderRadius: '20px', padding: '1.5rem' }}>
-                        <Target className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-                        <div style={{ fontSize: '2rem', fontWeight: 900 }}>{player.score}</div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase' }}>Skor</div>
+                    <div className="bg-amber-50 border-2 sm:border-[3px] border-amber-500 rounded-2xl p-2 sm:p-6 flex flex-col items-center">
+                        <Target className="w-5 h-5 sm:w-8 sm:h-8 text-amber-600 mb-1 sm:mb-2" />
+                        <div className="text-xl sm:text-3xl font-black">{player.score}</div>
+                        <div className="text-[10px] sm:text-xs font-black uppercase text-amber-700">Skor</div>
                     </div>
                 </div>
 
                 {/* Leaderboard */}
-                <div style={{ background: '#fff', borderRadius: '30px', border: '3px solid var(--border)', padding: '1.5rem', marginBottom: '2rem' }} className="border-border">
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase' }}>Papan Peringkat</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div className="bg-white rounded-3xl border-2 sm:border-[3px] border-slate-200 p-4 sm:p-6 mb-6 sm:mb-8 shadow-inner">
+                    <h2 className="text-lg sm:text-xl font-black mb-4 uppercase tracking-wider text-slate-700">Papan Peringkat</h2>
+                    <div className="flex flex-col gap-2">
                         {topPlayers.map((p, index) => (
-                            <div key={p.id} style={{ display: 'flex', alignItems: 'center', background: p.id === player.id ? '#bbdefb' : 'transparent', padding: '0.8rem 1.5rem', borderRadius: '15px', border: p.id === player.id ? '2px solid #0288d1' : 'none' }}>
-                                <div style={{ width: '40px' }}>{getMedalIcon(index + 1)}</div>
-                                <div style={{ flex: 1, textAlign: 'left', fontWeight: 900, fontSize: '1.2rem' }}>{p.name} {p.id === player.id && "(KAMU)"}</div>
-                                <div style={{ fontWeight: 900, fontSize: '1.4rem', color: '#0288d1' }}>{p.score}</div>
+                            <div
+                                key={p.id}
+                                className={`
+                                    flex items-center gap-3 p-2 sm:p-3 rounded-xl transition-all
+                                    ${p.id === player.id ? 'bg-blue-100 border-2 border-blue-500 ring-2 ring-blue-200' : 'bg-slate-50 border border-slate-100'}
+                                `}
+                            >
+                                <div className="w-8 sm:w-10 flex-shrink-0 flex justify-center">
+                                    {getMedalIcon(index + 1)}
+                                </div>
+                                <div className="flex-1 text-left font-black text-sm sm:text-lg truncate text-slate-800">
+                                    {p.name} {p.id === player.id && <span className="text-blue-600 text-[10px] sm:text-xs ml-1">(KAMU)</span>}
+                                </div>
+                                <div className="font-black text-base sm:text-xl text-blue-600 mr-1">
+                                    {p.score}
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button onClick={handlePlayAgain} className={styles.btn} style={{ flex: 1, height: '60px' }}>
-                        <RotateCcw className="w-6 h-6 mr-2" /> MAIN LAGI
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+                    <button
+                        onClick={handlePlayAgain}
+                        className={`${styles.btn} w-full py-4 sm:py-0 h-14 sm:h-16 text-sm sm:text-base`}
+                    >
+                        <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 mr-2" /> MAIN LAGI
                     </button>
-                    <Link href="/" style={{ flex: 1 }}>
-                        <button className={`${styles.btn} ${styles.btnSecondary}`} style={{ width: '100%', height: '60px' }}>
-                            <Home className="w-6 h-6 mr-2" /> MENU UTAMA
+                    <Link href="/" className="w-full">
+                        <button
+                            className={`${styles.btn} ${styles.btnSecondary} w-full py-4 sm:py-0 h-14 sm:h-16 text-sm sm:text-base`}
+                        >
+                            <Home className="w-5 h-5 sm:w-6 sm:h-6 mr-2" /> MENU UTAMA
                         </button>
                     </Link>
                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useGameStore } from './useGameStore';
 
 // Sound frequencies for different events
 const SOUND_CONFIG = {
@@ -31,7 +32,7 @@ const SOUND_CONFIG = {
 };
 
 export function useSoundEffects() {
-    const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+    const { isSoundEnabled, toggleSound } = useGameStore();
     const audioContextRef = useRef<AudioContext | null>(null);
     const speechSynthRef = useRef<SpeechSynthesis | null>(null);
 
@@ -50,24 +51,10 @@ export function useSoundEffects() {
         return speechSynthRef.current;
     }, []);
 
-    // Load sound preference from localStorage
+    // Initialize speech synthesis on mount
     useEffect(() => {
-        const savedPref = localStorage.getItem('game-sound-enabled');
-        if (savedPref !== null) {
-            setIsSoundEnabled(savedPref === 'true');
-        }
-        // Initialize speech synthesis
         initSpeechSynth();
     }, [initSpeechSynth]);
-
-    // Save sound preference to localStorage
-    const toggleSound = useCallback(() => {
-        setIsSoundEnabled(prev => {
-            const newValue = !prev;
-            localStorage.setItem('game-sound-enabled', String(newValue));
-            return newValue;
-        });
-    }, []);
 
     // Play a single tone
     const playTone = useCallback((frequency: number, duration: number, type: OscillatorType, volume: number, startTime: number = 0) => {
@@ -131,7 +118,7 @@ export function useSoundEffects() {
 
         // Play happy tones
         const config = SOUND_CONFIG.correct;
-        config.frequencies.forEach((freq, index) => {
+        config.frequencies.forEach((freq: number, index: number) => {
             playTone(freq, config.duration, config.type, config.volume, index * 0.06);
         });
 
@@ -147,11 +134,11 @@ export function useSoundEffects() {
 
         // Play sad tones
         const config = SOUND_CONFIG.wrong;
-        config.frequencies.forEach((freq, index) => {
+        config.frequencies.forEach((freq: number, index: number) => {
             playTone(freq, config.duration, config.type, config.volume, index * 0.12);
         });
 
-        // Speak "Salah!" with lower pitch (sad tone)
+        // Speak \"Salah!\" with lower pitch (sad tone)
         setTimeout(() => {
             speak('Salah', 0.8, 0.9);
         }, 200);
@@ -163,7 +150,7 @@ export function useSoundEffects() {
 
         // Play victory fanfare
         const config = SOUND_CONFIG.finish;
-        config.frequencies.forEach((freq, index) => {
+        config.frequencies.forEach((freq: number, index: number) => {
             playTone(freq, config.duration, config.type, config.volume, index * 0.1);
         });
 

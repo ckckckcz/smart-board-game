@@ -133,6 +133,18 @@ export default function GameBoard() {
             <img src="/assets/bird-removebg-preview.png" alt="" className={styles.birds} />
             <img src="/assets/bird-removebg-preview.png" alt="" className={styles.birdsRight} />
 
+            {/* Sound Icon Global Toggle (Same as landing) */}
+            <img
+                src="/assets/sound.png"
+                alt="Sound"
+                onClick={toggleSound}
+                className={styles.soundIcon}
+                style={{
+                    filter: isSoundEnabled ? 'none' : 'grayscale(100%) brightness(0.8)',
+                    transition: 'all 0.3s ease'
+                }}
+            />
+
             {/* Header / StatusBar */}
             <header className={styles.header} style={{ marginTop: '1rem', width: '95%', maxWidth: '800px' }}>
                 <div className={styles.playerBadge}>
@@ -146,30 +158,6 @@ export default function GameBoard() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    {/* Sound Toggle Button */}
-                    <button
-                        onClick={toggleSound}
-                        style={{
-                            background: isSoundEnabled ? '#4caf50' : '#9e9e9e',
-                            border: '3px solid var(--border)',
-                            borderRadius: '15px',
-                            padding: '0.6rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s ease',
-                            boxShadow: isSoundEnabled ? '0 4px 0 #388e3c' : '0 4px 0 #757575'
-                        }}
-                        title={isSoundEnabled ? 'Matikan Suara' : 'Hidupkan Suara'}
-                    >
-                        {isSoundEnabled ? (
-                            <Volume2 className="w-5 h-5 text-white" />
-                        ) : (
-                            <VolumeX className="w-5 h-5 text-white" />
-                        )}
-                    </button>
-
                     <div className={styles.statsRow}>
                         <div className={styles.statItem}>
                             <div className={styles.statLabel} style={{ color: '#4caf50' }}>Benar</div>
@@ -300,7 +288,7 @@ export default function GameBoard() {
                                 }}
                             >
                                 <Flag className="w-8 h-8 mr-3" />
-                                {isSubmitting ? 'MENYIMPAN...' : 'SELESAI'}
+                                {isSubmitting ? 'MENYIMPAN...' : 'Selesaikan Game'}
                             </button>
                         </div>
                     )}
