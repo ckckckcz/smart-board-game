@@ -51,8 +51,13 @@ function dbQuestionToQuestion(dbQuestion: DbQuestion): Question {
         }
     }
 
-    if (dbQuestion.matching_pairs) {
-        question.matchingPairs = dbQuestion.matching_pairs;
+    if (dbQuestion.type === 'matching') {
+        if (dbQuestion.matching_pairs) {
+            question.matchingLeft = dbQuestion.matching_pairs;
+        }
+        if (dbQuestion.options) {
+            question.matchingRight = dbQuestion.options;
+        }
     }
 
     if (dbQuestion.matching_answer) {
@@ -87,8 +92,13 @@ function questionToDbQuestion(question: Question): Partial<DbQuestion> {
         dbQuestion.correct_answer = String(question.correctAnswer);
     }
 
-    if (question.matchingPairs) {
-        dbQuestion.matching_pairs = question.matchingPairs;
+    if (question.type === 'matching') {
+        if (question.matchingLeft) {
+            dbQuestion.matching_pairs = question.matchingLeft as any[];
+        }
+        if (question.matchingRight) {
+            dbQuestion.options = question.matchingRight;
+        }
     }
 
     if (question.matchingAnswer) {

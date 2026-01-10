@@ -15,14 +15,16 @@ const QuestionPopup = () => {
   // For different question types
   const [selectedAnswer, setSelectedAnswer] = useState<string | boolean | null>(null);
   const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({
-    '1': '', '2': '', '3': ''
+    '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
   });
 
   useEffect(() => {
     if (!currentQuestion) return;
     setTimeLeft(currentQuestion.timeLimit);
     setSelectedAnswer(null);
-    setMatchingAnswers({ '1': '', '2': '', '3': '' });
+    setMatchingAnswers({
+      '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
+    });
     setIsExiting(false);
   }, [currentQuestion]);
 
@@ -54,13 +56,13 @@ const QuestionPopup = () => {
           answerQuestion(selectedAnswer as string);
           break;
         case 'matching':
-          if (!currentQuestion.matchingPairs) return;
-          const answers = currentQuestion.matchingPairs.map((_, i) => {
+          if (!currentQuestion.matchingLeft) return;
+          const answers = currentQuestion.matchingLeft.map((_, i) => {
             const num = i + 1;
             return `${num}${matchingAnswers[String(num)] || ''}`;
           }).join('-');
 
-          if (currentQuestion.matchingPairs.some((_, i) => !matchingAnswers[String(i + 1)])) return;
+          if (currentQuestion.matchingLeft.some((_, i) => !matchingAnswers[String(i + 1)])) return;
           answerQuestion(answers);
           break;
       }
@@ -87,8 +89,8 @@ const QuestionPopup = () => {
       case 'multiple_choice':
         return !!selectedAnswer;
       case 'matching':
-        if (!currentQuestion.matchingPairs) return false;
-        return currentQuestion.matchingPairs.every((_, i) => !!matchingAnswers[String(i + 1)]);
+        if (!currentQuestion.matchingLeft) return false;
+        return currentQuestion.matchingLeft.every((_, i) => !!matchingAnswers[String(i + 1)]);
       default:
         return false;
     }
@@ -242,9 +244,9 @@ const QuestionPopup = () => {
               </div>
             )}
 
-            {currentQuestion.type === 'matching' && currentQuestion.matchingPairs && (
+            {currentQuestion.type === 'matching' && currentQuestion.matchingLeft && (
               <div className="space-y-2">
-                {currentQuestion.matchingPairs.map((pair, index) => (
+                {currentQuestion.matchingLeft.map((item, index) => (
                   <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
                     {/* LEFT SIDE */}
                     <div className="flex-1 flex items-center gap-2 min-w-0">
@@ -252,12 +254,12 @@ const QuestionPopup = () => {
                         {index + 1}
                       </div>
 
-                      {pair.leftImage ? (
+                      {item.image ? (
                         <div className="w-14 h-10 rounded overflow-hidden border border-slate-200 bg-white shrink-0">
-                          <img src={pair.leftImage} alt={`Item ${index + 1}`} className="w-full h-full object-contain" />
+                          <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain" />
                         </div>
                       ) : (
-                        <span className="text-sm font-semibold text-slate-700 truncate">{pair.left}</span>
+                        <span className="text-sm font-semibold text-slate-700 truncate">{item.text}</span>
                       )}
                     </div>
 
@@ -274,12 +276,12 @@ const QuestionPopup = () => {
                           <SelectValue placeholder="Pilih" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-slate-200 text-slate-900 rounded-xl shadow-xl">
-                          {currentQuestion.matchingPairs?.map((p, i) => {
+                          {(currentQuestion.matchingRight || []).map((choice, i) => {
                             const label = String.fromCharCode(65 + i);
                             return (
                               <SelectItem key={label} value={label} className="font-semibold py-2 rounded-lg text-sm">
                                 <span className="text-blue-600 mr-1 font-bold">{label}.</span>
-                                <span className="truncate">{p.right}</span>
+                                <span className="truncate">{choice}</span>
                               </SelectItem>
                             );
                           })}

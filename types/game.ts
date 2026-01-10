@@ -8,6 +8,11 @@ export interface MatchingPair {
   leftImage?: string;
 }
 
+export interface MatchingLeftItem {
+  text: string;
+  image?: string;
+}
+
 export interface Question {
   id: string;
   category: QuestionCategory;
@@ -19,9 +24,10 @@ export interface Question {
   options?: string[];
   // For true/false
   correctAnswer?: string | boolean;
-  // For matching (3 pairs)
-  matchingPairs?: MatchingPair[];
-  matchingAnswer?: string; // Format: "1A-2B-3C"
+  // For matching (Flexible: independent left/right counts)
+  matchingLeft?: MatchingLeftItem[];
+  matchingRight?: string[];
+  matchingAnswer?: string; // Format: "1A-2B-3C" or similar depending on UI logic
   timeLimit: number; // in seconds
   points: number;
 }
