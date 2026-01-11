@@ -277,7 +277,9 @@ const QuestionPopup = () => {
                           <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain p-0.5" />
                         </div>
                       ) : (
-                        <span className="text-sm sm:text-base font-bold text-slate-700 truncate ml-1">{item.text}</span>
+                        <span className="text-sm sm:text-base font-bold text-slate-700 ml-1 break-words leading-tight">
+                          {item.text}
+                        </span>
                       )}
                     </div>
 
@@ -290,7 +292,7 @@ const QuestionPopup = () => {
                         value={matchingAnswers[String(index + 1)] || ''}
                         onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
                       >
-                        <SelectTrigger className="bg-white border-2 border-slate-200 text-slate-900 h-9 rounded-lg font-bold text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <SelectTrigger className="bg-white border-2 border-slate-200 text-slate-900 min-h-[2.25rem] h-auto py-2 rounded-lg font-bold text-sm focus:ring-blue-500 focus:border-blue-500 text-left">
                           <SelectValue placeholder="Pilih" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-slate-200 text-slate-900 rounded-xl shadow-xl">
@@ -298,8 +300,8 @@ const QuestionPopup = () => {
                             const label = String.fromCharCode(65 + i);
                             return (
                               <SelectItem key={label} value={label} className="font-semibold py-2 rounded-lg text-sm">
-                                <span className="text-blue-600 mr-1 font-bold">{label}.</span>
-                                <span className="truncate">{choice}</span>
+                                <span className="text-blue-600 mr-1 font-bold shrink-0">{label}.</span>
+                                <span className="whitespace-normal break-words">{choice}</span>
                               </SelectItem>
                             );
                           })}
