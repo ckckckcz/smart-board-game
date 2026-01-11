@@ -273,7 +273,7 @@ const QuestionPopup = () => {
                       </div>
 
                       {item.image ? (
-                        <div className="w-20 h-14 sm:w-28 sm:h-20 rounded-lg overflow-hidden border-2 border-slate-200 bg-white shrink-0 shadow-sm">
+                        <div className="w-32 h-24 sm:w-40 sm:h-28 rounded-lg overflow-hidden border-2 border-slate-200 bg-white shrink-0 shadow-sm">
                           <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain p-0.5" />
                         </div>
                       ) : (
@@ -285,7 +285,7 @@ const QuestionPopup = () => {
                     <HelpCircle className="w-4 h-4 text-slate-300 shrink-0" />
 
                     {/* RIGHT SIDE: Select */}
-                    <div className="w-24 shrink-0">
+                    <div className="w-32 sm:w-48 shrink-0">
                       <Select
                         value={matchingAnswers[String(index + 1)] || ''}
                         onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
