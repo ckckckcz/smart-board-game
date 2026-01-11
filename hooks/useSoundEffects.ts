@@ -29,11 +29,6 @@ const SOUND_CONFIG = {
         type: 'sine' as OscillatorType,
         volume: 0.35,
     },
-    applause: {
-        duration: 3, // 3 seconds of applause
-        clapCount: 40, // Number of clap sounds
-        volume: 0.4,
-    },
 };
 
 // Note: BGM is handled by HTML audio element in game/page.tsx
@@ -128,53 +123,17 @@ export function useSoundEffects() {
         });
     }, [isSoundEnabled, playTone]);
 
-    // Play applause sound - simulated clapping sounds
+    // Play applause sound using MP3 file
     const playApplauseSound = useCallback(() => {
         if (!isSoundEnabled) return;
 
-        const ctx = initAudioContext();
-        if (!ctx) return;
-
-        const config = SOUND_CONFIG.applause;
-
-        // Create multiple clap sounds with random timing
-        for (let i = 0; i < config.clapCount; i++) {
-            const startTime = Math.random() * config.duration * 0.8; // Random start within duration
-            const clapDuration = 0.03 + Math.random() * 0.02; // Short clap sound
-
-            // Create noise-based clap sound using oscillator with high frequency
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-            const filterNode = ctx.createBiquadFilter();
-
-            // Use white noise simulation with square wave
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(800 + Math.random() * 400, ctx.currentTime + startTime);
-
-            // High-pass filter for clap-like sound
-            filterNode.type = 'highpass';
-            filterNode.frequency.setValueAtTime(1000, ctx.currentTime);
-
-            oscillator.connect(filterNode);
-            filterNode.connect(gainNode);
-            gainNode.connect(ctx.destination);
-
-            // Quick attack and decay for clap sound
-            const volume = config.volume * (0.3 + Math.random() * 0.7); // Random volume variation
-            gainNode.gain.setValueAtTime(0, ctx.currentTime + startTime);
-            gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + startTime + 0.005);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + clapDuration);
-
-            oscillator.start(ctx.currentTime + startTime);
-            oscillator.stop(ctx.currentTime + startTime + clapDuration + 0.1);
-        }
-
-        // Also play some victory chord notes scattered throughout
-        const chordNotes = [523.25, 659.25, 783.99, 1046.50];
-        chordNotes.forEach((freq, index) => {
-            playTone(freq, 2, 'sine', 0.15, index * 0.2);
+        // Use HTML Audio element to play the clap.mp3 file
+        const audio = new Audio('/song/clap.mp3');
+        audio.volume = 0.6;
+        audio.play().catch((error) => {
+            console.log('Applause sound failed to play:', error);
         });
-    }, [isSoundEnabled, initAudioContext, playTone]);
+    }, [isSoundEnabled]);
 
     const { toggleSound } = useGameStore();
 
