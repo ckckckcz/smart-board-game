@@ -44,10 +44,18 @@ export default function GameBoard() {
     const [prevAnsweredCount, setPrevAnsweredCount] = useState(0);
     const bgmRef = useRef<HTMLAudioElement>(null);
 
-    // Control BGM based on sound toggle
+    // Control BGM based on sound toggle - iOS compatible
     useEffect(() => {
         if (bgmRef.current) {
-            bgmRef.current.volume = isSoundEnabled ? 0.4 : 0;
+            // Use muted attribute for iOS compatibility
+            bgmRef.current.muted = !isSoundEnabled;
+            bgmRef.current.volume = 0.4;
+
+            // For iOS: also pause/play based on toggle
+            if (isSoundEnabled) {
+                // Try to play if it was paused
+                bgmRef.current.play().catch(() => { });
+            }
         }
     }, [isSoundEnabled]);
 
@@ -55,15 +63,24 @@ export default function GameBoard() {
     useEffect(() => {
         const playBgmOnMount = () => {
             if (bgmRef.current) {
+                // Set initial muted state
+                bgmRef.current.muted = !isSoundEnabled;
+                bgmRef.current.volume = 0.4;
+
                 bgmRef.current.play().catch(() => {
                     // If autoplay blocked, try on first interaction
                     const tryPlayOnInteraction = () => {
-                        bgmRef.current?.play().catch(() => { });
+                        if (bgmRef.current) {
+                            bgmRef.current.muted = !isSoundEnabled;
+                            bgmRef.current.play().catch(() => { });
+                        }
                         document.removeEventListener('click', tryPlayOnInteraction);
                         document.removeEventListener('touchstart', tryPlayOnInteraction);
+                        document.removeEventListener('touchend', tryPlayOnInteraction);
                     };
                     document.addEventListener('click', tryPlayOnInteraction);
                     document.addEventListener('touchstart', tryPlayOnInteraction);
+                    document.addEventListener('touchend', tryPlayOnInteraction);
                 });
             }
         };
@@ -71,7 +88,7 @@ export default function GameBoard() {
         // Small delay to ensure DOM is ready
         const timer = setTimeout(playBgmOnMount, 100);
         return () => clearTimeout(timer);
-    }, []);
+    }, [isSoundEnabled]);
 
     useEffect(() => {
         setMounted(true);
@@ -168,6 +185,8 @@ export default function GameBoard() {
                 src="/song/0111.MP3"
                 loop
                 autoPlay
+                playsInline
+                preload="auto"
                 style={{ display: 'none' }}
             />
 

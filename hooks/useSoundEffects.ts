@@ -36,8 +36,9 @@ const SOUND_CONFIG = {
 export function useSoundEffects() {
     const { isSoundEnabled } = useGameStore();
     const audioContextRef = useRef<AudioContext | null>(null);
+    const audioUnlockedRef = useRef(false);
 
-    // Initialize AudioContext
+    // Initialize AudioContext with iOS unlock
     const initAudioContext = useCallback(() => {
         if (!audioContextRef.current) {
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -45,6 +46,17 @@ export function useSoundEffects() {
         if (audioContextRef.current.state === 'suspended') {
             audioContextRef.current.resume();
         }
+
+        // iOS unlock: play a silent buffer to unlock audio
+        if (!audioUnlockedRef.current && audioContextRef.current) {
+            const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+            const source = audioContextRef.current.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContextRef.current.destination);
+            source.start(0);
+            audioUnlockedRef.current = true;
+        }
+
         return audioContextRef.current;
     }, []);
 
