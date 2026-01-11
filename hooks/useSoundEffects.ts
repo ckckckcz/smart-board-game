@@ -123,18 +123,6 @@ export function useSoundEffects() {
         });
     }, [isSoundEnabled, playTone]);
 
-    // Play applause sound using MP3 file
-    const playApplauseSound = useCallback(() => {
-        if (!isSoundEnabled) return;
-
-        // Use HTML Audio element to play the clap.mp3 file
-        const audio = new Audio('/song/clap.mp3');
-        audio.volume = 0.6;
-        audio.play().catch((error) => {
-            console.log('Applause sound failed to play:', error);
-        });
-    }, [isSoundEnabled]);
-
     const { toggleSound } = useGameStore();
 
     return {
@@ -143,7 +131,6 @@ export function useSoundEffects() {
         playClickSound,
         playCorrectSound,
         playWrongSound,
-        playFinishSound,
-        playApplauseSound
+        playFinishSound
     };
 }

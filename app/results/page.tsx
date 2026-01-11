@@ -5,16 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Trophy, Medal, RotateCcw, Home, CheckCircle, XCircle, Target } from 'lucide-react';
 import { useGameStore } from '@/hooks/useGameStore';
-import { useSoundEffects } from '@/hooks/useSoundEffects';
 import ConfettiAnimation from '@/components/ui/confentti';
 import styles from '../common.module.css';
 
 export default function ResultsPage() {
     const router = useRouter();
-    const { player, currentRound, leaderboard, resetGame } = useGameStore();
+    const { player, currentRound, leaderboard, resetGame, isSoundEnabled } = useGameStore();
     const [mounted, setMounted] = useState(false);
-    const { playApplauseSound, isSoundEnabled } = useSoundEffects();
-    const hasPlayedApplause = useRef(false);
+    const applauseRef = useRef<HTMLAudioElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -22,15 +20,13 @@ export default function ResultsPage() {
 
     // Play applause sound when results page loads
     useEffect(() => {
-        if (mounted && player && !hasPlayedApplause.current) {
-            // Small delay to ensure audio context is ready
-            const timer = setTimeout(() => {
-                playApplauseSound();
-                hasPlayedApplause.current = true;
-            }, 500);
-            return () => clearTimeout(timer);
+        if (mounted && player && applauseRef.current && isSoundEnabled) {
+            applauseRef.current.volume = 0.7;
+            applauseRef.current.play().catch((error) => {
+                console.log('Applause autoplay blocked:', error);
+            });
         }
-    }, [mounted, player, playApplauseSound]);
+    }, [mounted, player, isSoundEnabled]);
 
     useEffect(() => {
         if (!player) {
@@ -66,6 +62,13 @@ export default function ResultsPage() {
 
     return (
         <div className={styles.container}>
+            {/* Applause Sound - Auto plays on page load */}
+            <audio
+                ref={applauseRef}
+                src="/song/clap.mp3"
+                preload="auto"
+            />
+            
             <ConfettiAnimation />
             <img src="/assets/background-city-removebg-preview.png" alt="" className={styles.bgCity} />
 
