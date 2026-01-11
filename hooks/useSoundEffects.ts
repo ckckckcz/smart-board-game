@@ -31,30 +31,69 @@ const SOUND_CONFIG = {
     },
 };
 
-export function useSoundEffects() {
-    const { isSoundEnabled, toggleSound } = useGameStore();
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const speechSynthRef = useRef<SpeechSynthesis | null>(null);
+// Singleton BGM instance to avoid multiple instances and recreation issues
+let globalBgm: HTMLAudioElement | null = null;
 
-    // Initialize AudioContext and SpeechSynthesis
+export function useSoundEffects() {
+    const { isSoundEnabled } = useGameStore();
+    const audioContextRef = useRef<AudioContext | null>(null);
+
+    // Initialize AudioContext
     const initAudioContext = useCallback(() => {
         if (!audioContextRef.current) {
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         }
+        if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
         return audioContextRef.current;
     }, []);
 
-    const initSpeechSynth = useCallback(() => {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            speechSynthRef.current = window.speechSynthesis;
-        }
-        return speechSynthRef.current;
-    }, []);
-
-    // Initialize speech synthesis on mount
+    // Initialize BGM as a singleton
     useEffect(() => {
-        initSpeechSynth();
-    }, [initSpeechSynth]);
+        if (typeof window !== 'undefined' && !globalBgm) {
+            globalBgm = new Audio('/song/0111.MP3');
+            globalBgm.loop = true;
+            globalBgm.volume = isSoundEnabled ? 0.4 : 0;
+        }
+    }, [isSoundEnabled]);
+
+    // Update global BGM volume when sound toggle changes
+    useEffect(() => {
+        if (globalBgm) {
+            globalBgm.volume = isSoundEnabled ? 0.4 : 0;
+            globalBgm.loop = true; // Reinforce loop
+
+            // If sound is enabled and it was paused (e.g. by autoplay block), try to play it
+            if (isSoundEnabled && globalBgm.paused) {
+                globalBgm.play().catch(() => { });
+            }
+        }
+    }, [isSoundEnabled]);
+
+    const playBgm = useCallback(() => {
+        initAudioContext();
+        if (globalBgm) {
+            globalBgm.play().catch(err => {
+                console.log('BGM playback failed:', err);
+                // Fallback: try to play on next user interaction if failed
+                const playOnState = () => {
+                    globalBgm?.play().catch(() => { });
+                    window.removeEventListener('click', playOnState);
+                    window.removeEventListener('touchstart', playOnState);
+                };
+                window.addEventListener('click', playOnState);
+                window.addEventListener('touchstart', playOnState);
+            });
+        }
+    }, [initAudioContext]);
+
+    const stopBgm = useCallback(() => {
+        if (globalBgm) {
+            globalBgm.pause();
+            globalBgm.currentTime = 0;
+        }
+    }, []);
 
     // Play a single tone
     const playTone = useCallback((frequency: number, duration: number, type: OscillatorType, volume: number, startTime: number = 0) => {
@@ -79,32 +118,6 @@ export function useSoundEffects() {
         oscillator.stop(ctx.currentTime + startTime + duration + 0.1);
     }, [initAudioContext]);
 
-    // Speak text using Speech Synthesis
-    const speak = useCallback((text: string, pitch: number = 1, rate: number = 1) => {
-        const synth = speechSynthRef.current || initSpeechSynth();
-        if (!synth) return;
-
-        // Cancel any ongoing speech
-        synth.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'id-ID'; // Indonesian
-        utterance.pitch = pitch; // 0-2, default 1
-        utterance.rate = rate; // 0.1-10, default 1
-        utterance.volume = 1;
-
-        // Try to find Indonesian voice, fallback to default
-        const voices = synth.getVoices();
-        const indonesianVoice = voices.find(v => v.lang.includes('id')) ||
-            voices.find(v => v.lang.includes('en')) ||
-            voices[0];
-        if (indonesianVoice) {
-            utterance.voice = indonesianVoice;
-        }
-
-        synth.speak(utterance);
-    }, [initSpeechSynth]);
-
     // Play click sound when starting a question
     const playClickSound = useCallback(() => {
         if (!isSoundEnabled) return;
@@ -112,7 +125,7 @@ export function useSoundEffects() {
         playTone(config.frequency, config.duration, config.type, config.volume);
     }, [isSoundEnabled, playTone]);
 
-    // Play correct answer sound (happy chord + speech)
+    // Play correct answer sound (happy chord)
     const playCorrectSound = useCallback(() => {
         if (!isSoundEnabled) return;
 
@@ -121,14 +134,9 @@ export function useSoundEffects() {
         config.frequencies.forEach((freq: number, index: number) => {
             playTone(freq, config.duration, config.type, config.volume, index * 0.06);
         });
+    }, [isSoundEnabled, playTone]);
 
-        // Speak "Benar!" with high pitch (happy tone)
-        setTimeout(() => {
-            speak('Benar!', 1.3, 1.1);
-        }, 150);
-    }, [isSoundEnabled, playTone, speak]);
-
-    // Play wrong answer sound (sad tones + speech)
+    // Play wrong answer sound (sad tones)
     const playWrongSound = useCallback(() => {
         if (!isSoundEnabled) return;
 
@@ -137,14 +145,9 @@ export function useSoundEffects() {
         config.frequencies.forEach((freq: number, index: number) => {
             playTone(freq, config.duration, config.type, config.volume, index * 0.12);
         });
+    }, [isSoundEnabled, playTone]);
 
-        // Speak \"Salah!\" with lower pitch (sad tone)
-        setTimeout(() => {
-            speak('Salah', 0.8, 0.9);
-        }, 200);
-    }, [isSoundEnabled, playTone, speak]);
-
-    // Play finish/victory sound with speech
+    // Play finish/victory sound
     const playFinishSound = useCallback(() => {
         if (!isSoundEnabled) return;
 
@@ -153,12 +156,9 @@ export function useSoundEffects() {
         config.frequencies.forEach((freq: number, index: number) => {
             playTone(freq, config.duration, config.type, config.volume, index * 0.1);
         });
+    }, [isSoundEnabled, playTone]);
 
-        // Speak congratulations
-        setTimeout(() => {
-            speak('Selamat! Kamu sudah selesai!', 1.2, 1.0);
-        }, 400);
-    }, [isSoundEnabled, playTone, speak]);
+    const { toggleSound } = useGameStore();
 
     return {
         isSoundEnabled,
@@ -167,5 +167,7 @@ export function useSoundEffects() {
         playCorrectSound,
         playWrongSound,
         playFinishSound,
+        playBgm,
+        stopBgm
     };
 }

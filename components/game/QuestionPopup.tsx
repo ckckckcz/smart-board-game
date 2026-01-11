@@ -247,19 +247,19 @@ const QuestionPopup = () => {
             {currentQuestion.type === 'matching' && currentQuestion.matchingLeft && (
               <div className="space-y-2">
                 {currentQuestion.matchingLeft.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                  <div key={index} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
                     {/* LEFT SIDE */}
                     <div className="flex-1 flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
                         {index + 1}
                       </div>
 
                       {item.image ? (
-                        <div className="w-14 h-10 rounded overflow-hidden border border-slate-200 bg-white shrink-0">
-                          <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain" />
+                        <div className="w-20 h-14 sm:w-28 sm:h-20 rounded-lg overflow-hidden border-2 border-slate-200 bg-white shrink-0 shadow-sm">
+                          <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain p-0.5" />
                         </div>
                       ) : (
-                        <span className="text-sm font-semibold text-slate-700 truncate">{item.text}</span>
+                        <span className="text-sm sm:text-base font-bold text-slate-700 truncate ml-1">{item.text}</span>
                       )}
                     </div>
 

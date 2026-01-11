@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, X, CheckCircle, Lock, Flag, Volume2, VolumeX } from 'lucide-react';
 import { useGameStore } from '@/hooks/useGameStore';
@@ -36,12 +36,44 @@ export default function GameBoard() {
         playClickSound,
         playCorrectSound,
         playWrongSound,
-        playFinishSound
+        playFinishSound,
+        playBgm,
+        stopBgm
     } = useSoundEffects();
 
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [prevAnsweredCount, setPrevAnsweredCount] = useState(0);
+    const bgmRef = useRef<HTMLAudioElement>(null);
+
+    // Control BGM based on sound toggle
+    useEffect(() => {
+        if (bgmRef.current) {
+            bgmRef.current.volume = isSoundEnabled ? 0.4 : 0;
+        }
+    }, [isSoundEnabled]);
+
+    // Try to play BGM on mount (after user clicked START, so should work)
+    useEffect(() => {
+        const playBgmOnMount = () => {
+            if (bgmRef.current) {
+                bgmRef.current.play().catch(() => {
+                    // If autoplay blocked, try on first interaction
+                    const tryPlayOnInteraction = () => {
+                        bgmRef.current?.play().catch(() => { });
+                        document.removeEventListener('click', tryPlayOnInteraction);
+                        document.removeEventListener('touchstart', tryPlayOnInteraction);
+                    };
+                    document.addEventListener('click', tryPlayOnInteraction);
+                    document.addEventListener('touchstart', tryPlayOnInteraction);
+                });
+            }
+        };
+
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(playBgmOnMount, 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         setMounted(true);
@@ -49,7 +81,12 @@ export default function GameBoard() {
         clearFeedbackOnMount();
         // Initialize prevAnsweredCount to current state to prevent sound on mount
         setPrevAnsweredCount(Object.keys(answeredQuestions).length);
-    }, [clearFeedbackOnMount]);
+
+        // Cleanup: stop BGM when leaving game page
+        return () => {
+            stopBgm();
+        };
+    }, [clearFeedbackOnMount, stopBgm]);
 
     useEffect(() => {
         if (!player || !currentRound) {
@@ -89,15 +126,6 @@ export default function GameBoard() {
         // Cek apakah soal ini sudah dijawab
         if (answeredQuestions[question.id]) return;
 
-        // Cek apakah soal sebelumnya sudah dijawab (harus urut)
-        if (index > 0) {
-            const prevQuestion = questions[index - 1];
-            if (!answeredQuestions[prevQuestion.id]) {
-                // Soal sebelumnya belum dijawab, tidak bisa lanjut
-                return;
-            }
-        }
-
         // Play click sound
         playClickSound();
         selectQuestion(question.id);
@@ -112,6 +140,7 @@ export default function GameBoard() {
         playFinishSound();
 
         try {
+            stopBgm();
             await endGame();
             // Navigasi akan dilakukan otomatis melalui useEffect ketika gameComplete = true
         } catch (error) {
@@ -128,6 +157,15 @@ export default function GameBoard() {
 
     return (
         <div className={styles.container}>
+            {/* Background Music - HTML Audio Element */}
+            <audio
+                ref={bgmRef}
+                src="/song/0111.MP3"
+                loop
+                autoPlay
+                style={{ display: 'none' }}
+            />
+
             {/* Background Assets */}
             <img src="/assets/background-city-removebg-preview.png" alt="" className={styles.bgCity} />
             <img src="/assets/bird-removebg-preview.png" alt="" className={styles.birds} />
@@ -197,7 +235,7 @@ export default function GameBoard() {
                         border: '2px solid #90caf9'
                     }}>
                         <p style={{ fontWeight: 900, fontSize: '1.1rem', color: '#01579b', margin: 0 }}>
-                            📝 Klik nomor soal secara urut untuk mengerjakan!
+                            📝 Pilih nomor soal untuk dikerjakan!
                         </p>
                     </div>
                 )}
@@ -208,20 +246,15 @@ export default function GameBoard() {
                         const answerResult = answeredQuestions[q.id];
                         const isAnswered = !!answerResult;
 
-                        // Determine if this tile is clickable (current or already answered)
-                        const prevAnswered = index === 0 || !!answeredQuestions[questions[index - 1]?.id];
-                        const isClickable = !isAnswered && prevAnswered && !currentQuestion && !showFeedback;
-                        const isLocked = !isAnswered && !prevAnswered;
-                        const isNext = !isAnswered && prevAnswered;
+                        // Determine if this tile is clickable (not answered yet)
+                        const isClickable = !isAnswered && !currentQuestion && !showFeedback;
+                        const isNext = !isAnswered && (index === 0 || !!answeredQuestions[questions[index - 1]?.id]);
 
                         // Colors
                         let tileColor = '#8FD9FB'; // default blue
                         let tileShadow = '0 8px 0 #78c1e0';
 
-                        if (isLocked) {
-                            tileColor = '#e0e0e0';
-                            tileShadow = '0 8px 0 #bdbdbd';
-                        } else if (isNext) {
+                        if (isNext) {
                             tileColor = '#4fc3f7';
                             tileShadow = '0 8px 0 #29b6f6';
                         }
@@ -234,17 +267,17 @@ export default function GameBoard() {
                                     ${styles.tile}
                                     ${answerResult === 'correct' ? styles.tileCorrect : ''}
                                     ${answerResult === 'wrong' ? styles.tileWrong : ''}
-                                    ${isNext && !isAnswered ? styles.tileActive : ''}
+                                    ${isClickable ? styles.tileActive : ''}
                                 `}
                                 style={{
                                     backgroundColor: (!isAnswered) ? tileColor : undefined,
                                     color: (!isAnswered) ? '#1e293b' : undefined,
                                     borderColor: (!isAnswered) ? 'rgba(0,0,0,0.1)' : undefined,
-                                    opacity: isAnswered ? 0.6 : isLocked ? 0.5 : 1,
+                                    opacity: isAnswered ? 0.6 : 1,
                                     pointerEvents: isClickable ? 'auto' : 'none',
                                     cursor: isClickable ? 'pointer' : 'default',
                                     boxShadow: (!isAnswered) ? tileShadow : undefined,
-                                    transform: isNext && !currentQuestion && !showFeedback ? 'scale(1.05)' : undefined,
+                                    transform: isClickable ? 'scale(1.05)' : undefined,
                                     transition: 'all 0.3s ease'
                                 }}
                             >
@@ -252,7 +285,6 @@ export default function GameBoard() {
                                 <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{index + 1}</div>
                                 {isAnswered && answerResult === 'correct' && <CheckCircle className="absolute w-12 h-12 opacity-40 text-white" />}
                                 {isAnswered && answerResult === 'wrong' && <X className="absolute w-12 h-12 opacity-40 text-white" />}
-                                {isLocked && <Lock className="absolute w-8 h-8 opacity-30 text-gray-600" />}
                             </div>
                         );
                     })}
