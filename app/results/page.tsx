@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Trophy, Medal, RotateCcw, Home, CheckCircle, XCircle, Target } from 'lucide-react';
 import { useGameStore } from '@/hooks/useGameStore';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import ConfettiAnimation from '@/components/ui/confentti';
 import styles from '../common.module.css';
 
@@ -12,10 +13,24 @@ export default function ResultsPage() {
     const router = useRouter();
     const { player, currentRound, leaderboard, resetGame } = useGameStore();
     const [mounted, setMounted] = useState(false);
+    const { playApplauseSound, isSoundEnabled } = useSoundEffects();
+    const hasPlayedApplause = useRef(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Play applause sound when results page loads
+    useEffect(() => {
+        if (mounted && player && !hasPlayedApplause.current) {
+            // Small delay to ensure audio context is ready
+            const timer = setTimeout(() => {
+                playApplauseSound();
+                hasPlayedApplause.current = true;
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [mounted, player, playApplauseSound]);
 
     useEffect(() => {
         if (!player) {
