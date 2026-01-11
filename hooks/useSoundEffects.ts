@@ -13,13 +13,13 @@ const SOUND_CONFIG = {
     },
     correct: {
         frequencies: [523.25, 659.25, 783.99], // C5, E5, G5 - happy chord
-        duration: 0.12,
+        duration: 1.5, // Extended duration for longer sound
         type: 'sine' as OscillatorType,
         volume: 0.3,
     },
     wrong: {
         frequencies: [200, 150], // Low descending tones
-        duration: 0.15,
+        duration: 1.5, // Extended duration for longer sound
         type: 'square' as OscillatorType,
         volume: 0.25,
     },
@@ -31,8 +31,7 @@ const SOUND_CONFIG = {
     },
 };
 
-// Singleton BGM instance to avoid multiple instances and recreation issues
-let globalBgm: HTMLAudioElement | null = null;
+// Note: BGM is handled by HTML audio element in game/page.tsx
 
 export function useSoundEffects() {
     const { isSoundEnabled } = useGameStore();
@@ -47,52 +46,6 @@ export function useSoundEffects() {
             audioContextRef.current.resume();
         }
         return audioContextRef.current;
-    }, []);
-
-    // Initialize BGM as a singleton
-    useEffect(() => {
-        if (typeof window !== 'undefined' && !globalBgm) {
-            globalBgm = new Audio('/song/0111.MP3');
-            globalBgm.loop = true;
-            globalBgm.volume = isSoundEnabled ? 0.4 : 0;
-        }
-    }, [isSoundEnabled]);
-
-    // Update global BGM volume when sound toggle changes
-    useEffect(() => {
-        if (globalBgm) {
-            globalBgm.volume = isSoundEnabled ? 0.4 : 0;
-            globalBgm.loop = true; // Reinforce loop
-
-            // If sound is enabled and it was paused (e.g. by autoplay block), try to play it
-            if (isSoundEnabled && globalBgm.paused) {
-                globalBgm.play().catch(() => { });
-            }
-        }
-    }, [isSoundEnabled]);
-
-    const playBgm = useCallback(() => {
-        initAudioContext();
-        if (globalBgm) {
-            globalBgm.play().catch(err => {
-                console.log('BGM playback failed:', err);
-                // Fallback: try to play on next user interaction if failed
-                const playOnState = () => {
-                    globalBgm?.play().catch(() => { });
-                    window.removeEventListener('click', playOnState);
-                    window.removeEventListener('touchstart', playOnState);
-                };
-                window.addEventListener('click', playOnState);
-                window.addEventListener('touchstart', playOnState);
-            });
-        }
-    }, [initAudioContext]);
-
-    const stopBgm = useCallback(() => {
-        if (globalBgm) {
-            globalBgm.pause();
-            globalBgm.currentTime = 0;
-        }
     }, []);
 
     // Play a single tone
@@ -166,8 +119,6 @@ export function useSoundEffects() {
         playClickSound,
         playCorrectSound,
         playWrongSound,
-        playFinishSound,
-        playBgm,
-        stopBgm
+        playFinishSound
     };
 }

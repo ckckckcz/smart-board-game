@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, Check, HelpCircle } from 'lucide-react';
+import { Clock, Check, HelpCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -76,6 +76,15 @@ const QuestionPopup = () => {
     }, 300);
   }, [skipQuestion]);
 
+  // Close without answering (user can try again later)
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      // Just clear the current question without marking as wrong
+      useGameStore.setState({ currentQuestion: null });
+    }, 300);
+  }, []);
+
   if (!currentQuestion) return null;
 
   const timerPercentage = (timeLeft / currentQuestion.timeLimit) * 100;
@@ -130,6 +139,15 @@ const QuestionPopup = () => {
               {timeLeft}s
             </span>
           </div>
+
+          {/* Close Button */}
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition-colors cursor-pointer"
+            title="Tutup soal"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
 
         {/* Timer Progress Bar */}

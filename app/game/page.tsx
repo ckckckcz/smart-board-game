@@ -36,9 +36,7 @@ export default function GameBoard() {
         playClickSound,
         playCorrectSound,
         playWrongSound,
-        playFinishSound,
-        playBgm,
-        stopBgm
+        playFinishSound
     } = useSoundEffects();
 
     const [mounted, setMounted] = useState(false);
@@ -84,9 +82,12 @@ export default function GameBoard() {
 
         // Cleanup: stop BGM when leaving game page
         return () => {
-            stopBgm();
+            if (bgmRef.current) {
+                bgmRef.current.pause();
+                bgmRef.current.currentTime = 0;
+            }
         };
-    }, [clearFeedbackOnMount, stopBgm]);
+    }, [clearFeedbackOnMount]);
 
     useEffect(() => {
         if (!player || !currentRound) {
@@ -140,7 +141,11 @@ export default function GameBoard() {
         playFinishSound();
 
         try {
-            stopBgm();
+            // Stop BGM
+            if (bgmRef.current) {
+                bgmRef.current.pause();
+                bgmRef.current.currentTime = 0;
+            }
             await endGame();
             // Navigasi akan dilakukan otomatis melalui useEffect ketika gameComplete = true
         } catch (error) {

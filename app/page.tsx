@@ -12,7 +12,7 @@ export default function StartScreen() {
   const router = useRouter();
   const { rounds, setPlayer, selectRound, startGame } = useGameStore();
   const { isInitialized, isLoading } = useInitializeGame();
-  const { isSoundEnabled, toggleSound, playBgm } = useSoundEffects();
+  const { isSoundEnabled, toggleSound } = useSoundEffects();
 
   const [playerName, setPlayerName] = useState('');
   const [selectedRoundId, setSelectedRoundId] = useState('');
@@ -28,10 +28,6 @@ export default function StartScreen() {
     setPlayer(playerName.trim());
     selectRound(selectedRoundId);
     startGame();
-
-    // Start BGM here - legitimate user interaction, browser will allow it
-    playBgm();
-
     router.push('/game');
   };
 
