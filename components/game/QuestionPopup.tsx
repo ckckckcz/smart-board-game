@@ -108,14 +108,14 @@ const QuestionPopup = () => {
   const hasImage = (currentQuestion.imageUrls && currentQuestion.imageUrls.length > 0) || currentQuestion.imageUrl;
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-start sm:items-center justify-center p-1 sm:p-3 pt-2 transition-all duration-300 ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-50 flex items-start justify-center p-0 transition-all duration-300 ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       {/* Dynamic Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300" />
 
-      {/* Modal Card */}
+      {/* Modal Card - Full screen on all devices */}
       <div
         className={`
-            relative w-full max-w-md sm:max-w-lg md:max-w-2xl bg-white border border-border rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[98vh] sm:max-h-[95vh] flex flex-col
+            relative w-full h-full bg-white border-0 shadow-2xl overflow-hidden flex flex-col
             transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
             ${isExiting ? 'scale-95 translate-y-4' : 'scale-100 translate-y-0'}
             animate-scale-in
