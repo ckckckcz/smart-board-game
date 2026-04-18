@@ -3,6 +3,46 @@ import { persist } from 'zustand/middleware';
 import { GameState, Player, Round, Question, QuestionCategory } from '@/types/game';
 import { roundsService, questionsService, playersService, adminService } from '@/lib/db-service';
 
+function hashStringToSeed(input: string): number {
+  // xfnv1a 32-bit hash
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed: number) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6D2B79F5;
+    let x = t;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const rng = mulberry32(seed);
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function shuffle<T>(items: T[]): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 interface GameStore extends GameState {
   // Data stores
   rounds: Round[];
@@ -126,22 +166,30 @@ export const useGameStore = create<GameStore>()(
         const { currentRound, allQuestions } = get();
         if (!currentRound) return;
 
-        // Select questions based on round configuration
-        // Soal akan disusun urut berdasarkan kategori C1→C6
+        // Select questions deterministically per round (same set for all players),
+        // then shuffle final order per game start (random order for each player).
         const selectedQuestions: Question[] = [];
         const categories: QuestionCategory[] = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
 
-        categories.forEach(category => {
+        categories.forEach((category) => {
           const count = currentRound.questionCounts[category];
-          const categoryQuestions = allQuestions.filter(q => q.category === category);
-          // Shuffle dalam kategori untuk variasi, tapi urutan kategori tetap
-          const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
-          selectedQuestions.push(...shuffled.slice(0, count));
+          if (!count) return;
+
+          // Stabilize ordering so all clients pick the same questions
+          const categoryQuestions = allQuestions
+            .filter((q) => q.category === category)
+            .slice()
+            .sort((a, b) => a.id.localeCompare(b.id));
+
+          const seed = hashStringToSeed(`${currentRound.id}:${category}`);
+          const picked = seededShuffle(categoryQuestions, seed).slice(0, count);
+          selectedQuestions.push(...picked);
         });
 
-        // Tidak melakukan shuffle final - soal tetap urut C1→C6
+        const questionsForGame = shuffle(selectedQuestions);
+
         set({
-          questions: selectedQuestions,
+          questions: questionsForGame,
           answeredQuestions: {},
           isPlaying: true,
           currentQuestionIndex: 0,
