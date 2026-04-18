@@ -34,6 +34,7 @@ interface GameStore extends GameState {
   updateQuestion: (questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>) => Promise<void>;
   clearLeaderboard: () => Promise<void>;
   refreshLeaderboard: () => Promise<void>;
+  renamePlayer: (playerId: string, newName: string) => Promise<boolean>;
   toggleSound: () => void;
 }
 
@@ -427,6 +428,54 @@ export const useGameStore = create<GameStore>()(
           console.log('✅ Leaderboard refreshed from Supabase');
         } catch (error) {
           console.error('❌ Failed to refresh leaderboard:', error);
+        }
+      },
+
+      renamePlayer: async (playerId: string, newName: string) => {
+        const trimmedName = newName.trim();
+        if (!trimmedName) return false;
+
+        const prevLeaderboard = get().leaderboard;
+        const prevPlayer = get().player;
+
+        // Optimistic update
+        set({
+          leaderboard: prevLeaderboard.map((p) =>
+            p.id === playerId ? { ...p, name: trimmedName } : p
+          ),
+          player: prevPlayer?.id === playerId ? { ...prevPlayer, name: trimmedName } : prevPlayer,
+        });
+
+        // Only attempt DB update if id looks like a UUID
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(playerId)) {
+          return true;
+        }
+
+        try {
+          const updated = await playersService.updateName(playerId, trimmedName);
+          if (!updated) {
+            // Re-sync on failure
+            await get().refreshLeaderboard();
+            return false;
+          }
+
+          set({
+            leaderboard: get().leaderboard.map((p) =>
+              p.id === playerId ? { ...p, name: updated.name } : p
+            ),
+          });
+          return true;
+        } catch (error) {
+          console.error('❌ Failed to rename player:', error);
+          // Revert local changes and re-sync
+          set({ leaderboard: prevLeaderboard, player: prevPlayer });
+          try {
+            await get().refreshLeaderboard();
+          } catch {
+            // ignore
+          }
+          return false;
         }
       },
 

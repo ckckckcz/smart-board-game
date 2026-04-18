@@ -1,14 +1,18 @@
 'use client'
 import { useMemo, useState } from 'react';
-import { Trash2, Trophy, Users, Target, Award, Medal, Filter } from 'lucide-react';
+import { Trash2, Trophy, Users, Target, Award, Medal, Filter, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameStore } from '@/hooks/useGameStore';
 import { sortRoundsForDisplay } from '@/lib/rounds';
 
 const AnalyticsPanel = () => {
-  const { leaderboard, clearLeaderboard, rounds } = useGameStore();
+  const { leaderboard, clearLeaderboard, rounds, renamePlayer } = useGameStore();
   const [selectedRound, setSelectedRound] = useState<string>('all');
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState<string>('');
+  const [isSavingName, setIsSavingName] = useState<boolean>(false);
 
   const sortedRounds = useMemo(() => sortRoundsForDisplay(rounds), [rounds]);
 
@@ -45,6 +49,31 @@ const AnalyticsPanel = () => {
   const getRoundName = (roundId: string) => {
     const round = rounds.find(r => r.id === roundId);
     return round?.name || roundId;
+  };
+
+  const startEditName = (playerId: string, currentName: string) => {
+    setEditingPlayerId(playerId);
+    setDraftName(currentName);
+  };
+
+  const cancelEditName = () => {
+    setEditingPlayerId(null);
+    setDraftName('');
+    setIsSavingName(false);
+  };
+
+  const saveEditName = async (playerId: string) => {
+    const nextName = draftName.trim();
+    if (!nextName) return;
+
+    setIsSavingName(true);
+    const ok = await renamePlayer(playerId, nextName);
+    setIsSavingName(false);
+
+    if (ok) {
+      setEditingPlayerId(null);
+      setDraftName('');
+    }
   };
 
   // Sort all players by score (show all, not limited to 20)
@@ -162,7 +191,57 @@ const AnalyticsPanel = () => {
                   {getMedalIcon(index + 1)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 truncate">{player.name}</p>
+                  {editingPlayerId === player.id ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={draftName}
+                        onChange={(e) => setDraftName(e.target.value)}
+                        className="h-9 max-w-[260px]"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEditName(player.id);
+                          if (e.key === 'Escape') cancelEditName();
+                        }}
+                        aria-label="Ubah nama pemain"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => saveEditName(player.id)}
+                        disabled={isSavingName || !draftName.trim()}
+                        aria-label="Simpan nama"
+                      >
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={cancelEditName}
+                        disabled={isSavingName}
+                        aria-label="Batal"
+                      >
+                        <X className="w-4 h-4 text-slate-500" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="font-bold text-slate-900 truncate">{player.name}</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={() => startEditName(player.id, player.name)}
+                        aria-label="Ubah nama pemain"
+                      >
+                        <Pencil className="w-4 h-4 text-slate-400" />
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-xs text-slate-500 truncate">{getRoundName(player.roundId)}</p>
                 </div>
                 <div className="flex items-center gap-4 text-sm hidden sm:flex">

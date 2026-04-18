@@ -367,6 +367,25 @@ export const playersService = {
 
         return true;
     },
+
+    async updateName(playerId: string, name: string): Promise<Player | null> {
+        const trimmed = name.trim();
+        if (!trimmed) return null;
+
+        const { data, error } = await supabase
+            .from('players')
+            .update({ name: trimmed })
+            .eq('id', playerId)
+            .select('*')
+            .single();
+
+        if (error) {
+            console.error('Error updating player name:', error);
+            return null;
+        }
+
+        return dbPlayerToPlayer(data);
+    },
 };
 
 // =====================================================
