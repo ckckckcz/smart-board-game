@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, Trash2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGameStore } from '@/hooks/useGameStore';
 import { Round, QuestionCategory } from '@/types/game';
 import { CATEGORY_LABELS } from '@/data/mockData';
+import { sortRoundsForDisplay } from '@/lib/rounds';
 
 const RoundManager = () => {
   const { rounds, addRound, deleteRound } = useGameStore();
@@ -14,6 +15,8 @@ const RoundManager = () => {
   const [questionCounts, setQuestionCounts] = useState<Record<QuestionCategory, number>>({
     C1: 0, C2: 0, C3: 0, C4: 0, C5: 0, C6: 0,
   });
+
+  const sortedRounds = useMemo(() => sortRoundsForDisplay(rounds), [rounds]);
 
   const handleAddRound = () => {
     if (!roundName.trim()) return;
@@ -137,7 +140,7 @@ const RoundManager = () => {
           </div>
         ) : (
           <div className="space-y-1.5 sm:space-y-2">
-            {rounds.map((round) => (
+            {sortedRounds.map((round) => (
               <div
                 key={round.id}
                 className="bg-white border border-border rounded-lg p-2.5 sm:p-3 flex items-start justify-between gap-2 hover:bg-slate-50 transition-colors group shadow-sm"

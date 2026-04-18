@@ -1,11 +1,35 @@
 'use client';
 
-import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useGameStore } from '@/hooks/useGameStore';
+
+const AUTO_CONTINUE_DELAY = 1; // seconds
 
 const FeedbackBanner = () => {
   const { lastAnswerCorrect, currentQuestion, nextQuestion } = useGameStore();
+  const [countdown, setCountdown] = useState(AUTO_CONTINUE_DELAY);
+
+  // Auto-continue timer
+  useEffect(() => {
+    if (lastAnswerCorrect === null) return;
+
+    // Reset countdown when feedback appears
+    setCountdown(AUTO_CONTINUE_DELAY);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          nextQuestion();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastAnswerCorrect, nextQuestion]);
 
   if (lastAnswerCorrect === null) return null;
 
@@ -42,9 +66,9 @@ const FeedbackBanner = () => {
               : 'Jangan menyerah, coba lagi!'}
           </div>
 
-          <div className="flex items-center gap-2 text-white font-bold text-sm sm:text-base animate-pulse">
-            Klik untuk Lanjut
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="flex items-center gap-2 text-white font-bold text-sm sm:text-base">
+            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+            <span>Lanjut dalam {countdown} detik...</span>
           </div>
         </div>
       </div>

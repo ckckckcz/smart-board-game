@@ -1,13 +1,16 @@
 'use client'
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Trash2, Trophy, Users, Target, Award, Medal, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameStore } from '@/hooks/useGameStore';
+import { sortRoundsForDisplay } from '@/lib/rounds';
 
 const AnalyticsPanel = () => {
   const { leaderboard, clearLeaderboard, rounds } = useGameStore();
   const [selectedRound, setSelectedRound] = useState<string>('all');
+
+  const sortedRounds = useMemo(() => sortRoundsForDisplay(rounds), [rounds]);
 
   // Filter leaderboard by round
   const filteredLeaderboard = selectedRound === 'all'
@@ -115,7 +118,7 @@ const AnalyticsPanel = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-border text-slate-900">
                   <SelectItem value="all">Semua Babak</SelectItem>
-                  {rounds.map((round) => (
+                  {sortedRounds.map((round) => (
                     <SelectItem key={round.id} value={round.id}>
                       {round.name}
                     </SelectItem>

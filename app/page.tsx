@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useGameStore } from '@/hooks/useGameStore';
 import { useInitializeGame } from '@/hooks/useInitializeGame';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { sortRoundsForDisplay } from '@/lib/rounds';
 import styles from './landing.module.css';
 
 export default function StartScreen() {
@@ -17,6 +18,8 @@ export default function StartScreen() {
   const [playerName, setPlayerName] = useState('');
   const [selectedRoundId, setSelectedRoundId] = useState('');
   const [mounted, setMounted] = useState(false);
+
+  const sortedRounds = useMemo(() => sortRoundsForDisplay(rounds), [rounds]);
 
   useEffect(() => {
     setMounted(true);
@@ -105,7 +108,7 @@ export default function StartScreen() {
             onChange={(e) => setSelectedRoundId(e.target.value)}
           >
             <option value="" disabled>Pilih Babak...</option>
-            {rounds.map((round) => (
+            {sortedRounds.map((round) => (
               <option key={round.id} value={round.id}>
                 {round.name} ({round.totalQuestions} Soal)
               </option>
