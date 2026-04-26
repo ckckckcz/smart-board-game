@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { GameState, Player, Round, Question, QuestionCategory } from '@/types/game';
 import { roundsService, questionsService, playersService, adminService } from '@/lib/db-service';
+import { gradeShortAnswer } from '@/lib/answer-similarity';
 
 function hashStringToSeed(input: string): number {
   // xfnv1a 32-bit hash
@@ -71,7 +72,7 @@ interface GameStore extends GameState {
   deleteRound: (roundId: string) => Promise<void>;
   addQuestion: (question: Question) => Promise<void>;
   deleteQuestion: (questionId: string) => Promise<void>;
-  updateQuestion: (questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>) => Promise<void>;
+  updateQuestion: (questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points' | 'explanation' | 'matchingExplanation'>>) => Promise<void>;
   clearLeaderboard: () => Promise<void>;
   refreshLeaderboard: () => Promise<void>;
   renamePlayer: (playerId: string, newName: string) => Promise<boolean>;
@@ -91,6 +92,9 @@ export const useGameStore = create<GameStore>()(
       isPlaying: false,
       showFeedback: false,
       lastAnswerCorrect: null,
+      lastAnswerStatus: null,
+      lastAnswerSimilarity: null,
+      lastStudentAnswer: null,
       gameComplete: false,
       isSoundEnabled: true,
 
@@ -196,6 +200,9 @@ export const useGameStore = create<GameStore>()(
           gameComplete: false,
           showFeedback: false,
           lastAnswerCorrect: null,
+          lastAnswerStatus: null,
+          lastAnswerSimilarity: null,
+          lastStudentAnswer: null,
           currentQuestion: null,
         });
       },
@@ -214,14 +221,18 @@ export const useGameStore = create<GameStore>()(
         if (!currentQuestion || !player) return;
 
         let isCorrect = false;
+        let status: 'correct' | 'almost' | 'wrong' = 'wrong';
+        let similarity: number | null = null;
 
         // Check answer based on question type
         switch (currentQuestion.type) {
           case 'true_false':
             isCorrect = answer === currentQuestion.correctAnswer;
+            status = isCorrect ? 'correct' : 'wrong';
             break;
           case 'multiple_choice':
             isCorrect = answer === currentQuestion.correctAnswer;
+            status = isCorrect ? 'correct' : 'wrong';
             break;
           case 'matching':
             // For matching, compare the pairs regardless of order
@@ -236,14 +247,44 @@ export const useGameStore = create<GameStore>()(
             // Compare sorted pairs - order doesn't matter, only the pairs themselves
             isCorrect = studentPairs.length === correctPairs.length &&
               studentPairs.every((pair, index) => pair === correctPairs[index]);
+
+            status = isCorrect ? 'correct' : 'wrong';
             break;
+
+          case 'short_answer': {
+            const studentText = String(answer ?? '');
+            const correctText = String(currentQuestion.correctAnswer ?? '');
+            const graded = gradeShortAnswer(studentText, correctText);
+            similarity = graded.similarity;
+            status = graded.grade;
+            isCorrect = status === 'correct';
+            break;
+          }
         }
 
         const pointsEarned = isCorrect ? currentQuestion.points : 0;
 
+        const studentAnswerText = (() => {
+          switch (currentQuestion.type) {
+            case 'true_false':
+              return answer === true ? 'Benar' : answer === false ? 'Salah' : String(answer);
+            case 'multiple_choice':
+              return String(answer).toUpperCase();
+            case 'matching':
+              return String(answer).toUpperCase();
+            case 'short_answer':
+              return String(answer);
+            default:
+              return String(answer);
+          }
+        })();
+
         set({
           showFeedback: true,
           lastAnswerCorrect: isCorrect,
+          lastAnswerStatus: status,
+          lastAnswerSimilarity: similarity,
+          lastStudentAnswer: studentAnswerText,
           answeredQuestions: {
             ...answeredQuestions,
             [currentQuestion.id]: isCorrect ? 'correct' : 'wrong',
@@ -273,6 +314,9 @@ export const useGameStore = create<GameStore>()(
           currentQuestion: null,
           showFeedback: false,
           lastAnswerCorrect: null,
+          lastAnswerStatus: null,
+          lastAnswerSimilarity: null,
+          lastStudentAnswer: null,
           answeredQuestions: newAnsweredQuestions,
         });
 
@@ -294,6 +338,9 @@ export const useGameStore = create<GameStore>()(
             currentQuestion: null,
             showFeedback: false,
             lastAnswerCorrect: null,
+            lastAnswerStatus: null,
+            lastAnswerSimilarity: null,
+            lastStudentAnswer: null,
           }));
         }
       },
@@ -340,6 +387,9 @@ export const useGameStore = create<GameStore>()(
           isPlaying: false,
           showFeedback: false,
           lastAnswerCorrect: null,
+          lastAnswerStatus: null,
+          lastAnswerSimilarity: null,
+          lastStudentAnswer: null,
           gameComplete: false,
         });
       },

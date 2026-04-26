@@ -34,6 +34,10 @@ function dbQuestionToQuestion(dbQuestion: DbQuestion): Question {
         points: dbQuestion.points,
     };
 
+    if (dbQuestion.essay_answer) {
+        question.explanation = dbQuestion.essay_answer;
+    }
+
     if (dbQuestion.image_url) {
         question.imageUrl = dbQuestion.image_url;
     }
@@ -64,6 +68,10 @@ function dbQuestionToQuestion(dbQuestion: DbQuestion): Question {
         question.matchingAnswer = dbQuestion.matching_answer;
     }
 
+    if (dbQuestion.matching_explanation) {
+        question.matchingExplanation = dbQuestion.matching_explanation;
+    }
+
     if (dbQuestion.image_urls) {
         question.imageUrls = dbQuestion.image_urls;
     }
@@ -79,6 +87,10 @@ function questionToDbQuestion(question: Question): Partial<DbQuestion> {
         time_limit: question.timeLimit,
         points: question.points,
     };
+
+    if (question.explanation && question.explanation.trim()) {
+        dbQuestion.essay_answer = question.explanation.trim();
+    }
 
     if (question.imageUrl) {
         dbQuestion.image_url = question.imageUrl;
@@ -103,6 +115,10 @@ function questionToDbQuestion(question: Question): Partial<DbQuestion> {
 
     if (question.matchingAnswer) {
         dbQuestion.matching_answer = question.matchingAnswer;
+    }
+
+    if (question.type === 'matching' && question.matchingExplanation) {
+        dbQuestion.matching_explanation = question.matchingExplanation;
     }
 
     if (question.imageUrls) {
@@ -240,7 +256,7 @@ export const questionsService = {
         return true;
     },
 
-    async updatePartial(questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points'>>): Promise<Question | null> {
+    async updatePartial(questionId: string, updates: Partial<Pick<Question, 'timeLimit' | 'points' | 'explanation' | 'matchingExplanation'>>): Promise<Question | null> {
         const dbUpdates: Record<string, unknown> = {};
 
         if (updates.timeLimit !== undefined) {
@@ -248,6 +264,12 @@ export const questionsService = {
         }
         if (updates.points !== undefined) {
             dbUpdates.points = updates.points;
+        }
+        if (updates.explanation !== undefined) {
+            dbUpdates.essay_answer = updates.explanation || null;
+        }
+        if (updates.matchingExplanation !== undefined) {
+            dbUpdates.matching_explanation = updates.matchingExplanation || null;
         }
 
         const { data, error } = await supabase

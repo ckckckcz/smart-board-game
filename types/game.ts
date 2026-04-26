@@ -1,6 +1,6 @@
 export type QuestionCategory = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
 
-export type QuestionType = 'multiple_choice' | 'true_false' | 'matching';
+export type QuestionType = 'multiple_choice' | 'true_false' | 'matching' | 'short_answer';
 
 export interface MatchingPair {
   left: string;
@@ -20,14 +20,16 @@ export interface Question {
   question: string;
   imageUrl?: string; // Optional image for each question
   imageUrls?: string[]; // Multiple images support (up to 3)
+  explanation?: string; // Optional explanation shown in feedback
   // For multiple choice
   options?: string[];
-  // For true/false
+  // For true/false, multiple choice (letter), and short answer (string)
   correctAnswer?: string | boolean;
   // For matching (Flexible: independent left/right counts)
   matchingLeft?: MatchingLeftItem[];
   matchingRight?: string[];
   matchingAnswer?: string; // Format: "1A-2B-3C" or similar depending on UI logic
+  matchingExplanation?: string; // Optional explanation shown in popup when answer is wrong
   timeLimit: number; // in seconds
   points: number;
 }
@@ -59,6 +61,9 @@ export interface GameState {
   isPlaying: boolean;
   showFeedback: boolean;
   lastAnswerCorrect: boolean | null;
+  lastAnswerStatus: 'correct' | 'almost' | 'wrong' | null;
+  lastAnswerSimilarity: number | null; // 0..1, only used for short_answer
+  lastStudentAnswer: string | null;
   gameComplete: boolean;
   isSoundEnabled: boolean;
 }

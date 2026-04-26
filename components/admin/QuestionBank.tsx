@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { Plus, Trash2, BookOpen, Clock, AlertCircle, Image, X, Check, ArrowRight, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   multiple_choice: 'Pilihan Ganda',
   true_false: 'Benar/Salah',
   matching: 'Menjodohkan',
+  short_answer: 'Singkat',
 };
 
 // Simple category labels (C1-C6 only)
@@ -35,11 +37,32 @@ const QuestionBank = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTimeValue, setEditTimeValue] = useState<string>('');
   const [editPointsValue, setEditPointsValue] = useState<string>('');
+  // Separate popup state for editing penjelasan
+  const [explanationModalId, setExplanationModalId] = useState<string | null>(null);
+  const [explanationModalType, setExplanationModalType] = useState<string>('');
+  const [explanationModalValue, setExplanationModalValue] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mount flag for portal
+  useEffect(() => setIsMounted(true), []);
+
+  // Lock body scroll when explanation modal is open
+  useEffect(() => {
+    if (explanationModalId) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [explanationModalId]);
   const [category, setCategory] = useState<QuestionCategory>('C1');
   const [type, setType] = useState<QuestionType>('multiple_choice');
   const [questionText, setQuestionText] = useState('');
   const [timeLimit, setTimeLimit] = useState(3);
   const [points, setPoints] = useState(100);
+
+  // Optional explanation shown during feedback
+  const [explanation, setExplanation] = useState('');
 
   // Image upload
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -58,6 +81,9 @@ const QuestionBank = () => {
   // True/False
   const [trueFalseAnswer, setTrueFalseAnswer] = useState<string>('');
 
+  // Short Answer (Singkat)
+  const [shortAnswerKey, setShortAnswerKey] = useState('');
+
   // Matching (Simplified Logic for Flex Counts)
   const [matchingLeftInput, setMatchingLeftInput] = useState<MatchingLeftItem[]>([
     { text: '' }, { text: '' }, { text: '' }
@@ -66,6 +92,7 @@ const QuestionBank = () => {
     '', '', '', ''
   ]);
   const [matchingAnswer, setMatchingAnswer] = useState('');
+  const [matchingExplanation, setMatchingExplanation] = useState('');
 
   const updateLeftCount = (count: number) => {
     const newLeft = [...matchingLeftInput];
@@ -155,11 +182,14 @@ const QuestionBank = () => {
     setOptionE('');
     setCorrectOption('');
     setTrueFalseAnswer('');
+    setShortAnswerKey('');
+    setExplanation('');
     setMatchingLeftInput([
       { text: '' }, { text: '' }, { text: '' }
     ]);
     setMatchingRightInput(['', '', '', '']);
     setMatchingAnswer('');
+    setMatchingExplanation('');
     clearImages();
   };
 
@@ -181,6 +211,10 @@ const QuestionBank = () => {
       timeLimit: timeLimit * 60, // Convert minutes to seconds
       points,
     };
+
+    if (explanation.trim()) {
+      newQuestion.explanation = explanation.trim();
+    }
 
     // Add images if provided
     if (imageUrls.length > 0) {
@@ -210,6 +244,15 @@ const QuestionBank = () => {
         }
         newQuestion.correctAnswer = trueFalseAnswer === 'true';
         break;
+
+      case 'short_answer':
+        if (!shortAnswerKey.trim()) {
+          toast.error('Kunci jawaban singkat wajib diisi!');
+          return;
+        }
+        newQuestion.correctAnswer = shortAnswerKey.trim();
+        break;
+
       case 'matching':
         const validLeft = matchingLeftInput.filter(item => item.text || item.image);
         const validRight = matchingRightInput.filter(item => item !== '');
@@ -227,6 +270,9 @@ const QuestionBank = () => {
         newQuestion.matchingLeft = validLeft;
         newQuestion.matchingRight = validRight;
         newQuestion.matchingAnswer = matchingAnswer.trim().toUpperCase();
+        if (matchingExplanation.trim()) {
+          newQuestion.matchingExplanation = matchingExplanation.trim();
+        }
         break;
     }
 
@@ -248,6 +294,8 @@ const QuestionBank = () => {
         return q.correctAnswer
           ? <span className="text-sm font-bold text-emerald-600">Benar</span>
           : <span className="text-sm font-bold text-rose-600">Salah</span>;
+      case 'short_answer':
+        return <span className="text-sm font-bold text-slate-700">{String(q.correctAnswer || '-')}</span>;
       case 'matching':
         return (
           <div className="flex flex-col items-center">
@@ -396,6 +444,7 @@ const QuestionBank = () => {
                     accept="image/*"
                     multiple
                     onChange={handleImageUpload}
+                    aria-label="Upload gambar soal"
                     className="hidden"
                   />
                 </div>
@@ -465,6 +514,21 @@ const QuestionBank = () => {
               </div>
             )}
 
+            {type === 'short_answer' && (
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Kunci Jawaban Singkat</Label>
+                <Input
+                  value={shortAnswerKey}
+                  onChange={(e) => setShortAnswerKey(e.target.value)}
+                  placeholder="Contoh: Menjaga kestabilan nilai rupiah"
+                  className="bg-white border border-slate-200 text-slate-900 h-11"
+                />
+                <p className="text-[11px] text-slate-500 font-semibold">
+                  Penilaian pakai kemiripan teks: ≥85% benar, 60–84% hampir benar, &lt;60% salah.
+                </p>
+              </div>
+            )}
+
             {type === 'matching' && (
               <div className="space-y-6">
                 <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100 flex flex-col sm:flex-row gap-4 items-center justify-center">
@@ -517,7 +581,15 @@ const QuestionBank = () => {
                           {item.image && (
                             <div className="relative w-12 h-9 rounded border border-slate-200 overflow-hidden shrink-0 group">
                               <img src={item.image} alt="" className="w-full h-full object-cover" />
-                              <button onClick={() => removeLeftImage(index)} className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
+                              <button
+                                type="button"
+                                onClick={() => removeLeftImage(index)}
+                                aria-label="Hapus gambar"
+                                title="Hapus gambar"
+                                className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
                             </div>
                           )}
                         </div>
@@ -573,8 +645,35 @@ const QuestionBank = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Matching Explanation */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Penjelasan Menjodohkan (Ditampilkan saat jawaban salah)
+                  </Label>
+                  <Textarea
+                    value={matchingExplanation}
+                    onChange={(e) => setMatchingExplanation(e.target.value)}
+                    placeholder="Contoh: Pasangan yang benar adalah 1-A (Aset = Sumber Daya), 2-B (Liabilitas = Kewajiban)..."
+                    className="min-h-[90px] resize-none bg-white border border-amber-200 text-slate-900 placeholder:text-slate-400 focus:border-amber-400"
+                  />
+                  <p className="text-[11px] text-amber-700 font-semibold">
+                    💡 Penjelasan ini akan muncul di popup di bawah kotak menjodohkan saat siswa menjawab salah.
+                  </p>
+                </div>
               </div>
             )}
+
+            <div className="mt-6 space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pembahasan (Opsional)</Label>
+              <Textarea
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                placeholder="Contoh: Jawaban benar karena Bank Indonesia bertugas menjaga kestabilan nilai rupiah..."
+                className="min-h-[90px] resize-none bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400"
+              />
+            </div>
           </div>
 
           <Button
@@ -611,6 +710,7 @@ const QuestionBank = () => {
                     <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Gambar</TableHead>
                     <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider max-w-[200px]">Pertanyaan</TableHead>
                     <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Jawaban</TableHead>
+                    <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider max-w-[220px]">Penjelasan</TableHead>
                     <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider text-center">Waktu</TableHead>
                     <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider text-center">Poin</TableHead>
                     <TableHead className="text-slate-500 font-bold uppercase text-[10px] tracking-wider text-center">Aksi</TableHead>
@@ -668,6 +768,34 @@ const QuestionBank = () => {
                         <TableCell>
                           {renderAnswerDisplay(q)}
                         </TableCell>
+
+                        {/* Penjelasan column - full cell clickable, mobile-friendly */}
+                        <TableCell className="max-w-[200px] p-2">
+                          <button
+                            onClick={() => {
+                              setExplanationModalId(q.id);
+                              setExplanationModalType(q.type);
+                              setExplanationModalValue(q.matchingExplanation || q.explanation || '');
+                            }}
+                            title="Edit Penjelasan"
+                            className="w-full text-left group/fb cursor-pointer"
+                          >
+                            {(() => {
+                              const fb = q.matchingExplanation || q.explanation;
+                              return fb ? (
+                                <div className="flex items-start gap-1.5 rounded-lg px-2 py-1.5 bg-amber-50 border border-amber-100 hover:border-amber-300 hover:bg-amber-100 transition-colors">
+                                  <p className="text-xs text-amber-900 line-clamp-2 leading-relaxed flex-1">{fb}</p>
+                                  <Pencil className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 border border-dashed border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition-colors">
+                                  <Pencil className="w-3 h-3 text-slate-300 group-hover/fb:text-amber-400 transition-colors" />
+                                  <span className="text-xs text-slate-300 group-hover/fb:text-amber-500 transition-colors">Tambah penjelasan</span>
+                                </div>
+                              );
+                            })()}
+                          </button>
+                        </TableCell>
                         <TableCell className="text-center">
                           {editingId === q.id ? (
                             <input
@@ -708,7 +836,7 @@ const QuestionBank = () => {
                                     const newPoints = parseInt(editPointsValue) || q.points;
                                     updateQuestion(q.id, {
                                       timeLimit: newTime * 60,
-                                      points: newPoints
+                                      points: newPoints,
                                     });
                                     setEditingId(null);
                                     toast.success('Soal berhasil diperbarui!');
@@ -764,6 +892,84 @@ const QuestionBank = () => {
           )}
         </div>
       </div>
+
+      {/* ====== Explanation Edit Modal — rendered via portal to document.body ====== */}
+      {isMounted && explanationModalId && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setExplanationModalId(null)}
+          />
+
+          {/* Modal Card */}
+          <div
+            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-border overflow-hidden"
+            style={{ animation: 'fadeSlideUp 0.2s ease-out' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-7 py-5 bg-amber-50 border-b border-amber-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Edit Penjelasan Soal</h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    💡 Ditampilkan ke siswa saat jawaban salah
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setExplanationModalId(null)}
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-amber-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-7 space-y-4">
+              <Textarea
+                value={explanationModalValue}
+                onChange={(e) => setExplanationModalValue(e.target.value)}
+                placeholder="Tulis penjelasan jawaban yang benar di sini. Contoh: Jawaban benar adalah A karena Bank Indonesia adalah bank sentral yang bertugas menjaga kestabilan rupiah..."
+                className="min-h-[240px] resize-y bg-slate-50 border-2 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-amber-400 rounded-2xl text-sm leading-relaxed p-4"
+                autoFocus
+              />
+              <p className="text-xs text-amber-600 font-semibold">
+                Penjelasan ini akan muncul di popup permainan saat siswa menjawab salah.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center gap-3 px-7 py-5 bg-slate-50 border-t border-border">
+              <Button
+                variant="ghost"
+                onClick={() => setExplanationModalId(null)}
+                className="flex-1 h-11 rounded-xl cursor-pointer font-bold"
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={() => {
+                  const updates = explanationModalType === 'matching'
+                    ? { matchingExplanation: explanationModalValue }
+                    : { explanation: explanationModalValue };
+                  updateQuestion(explanationModalId, updates);
+                  setExplanationModalId(null);
+                  toast.success('Penjelasan berhasil disimpan!');
+                }}
+                className="flex-1 h-11 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl cursor-pointer shadow-md shadow-amber-500/30"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Simpan Penjelasan
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

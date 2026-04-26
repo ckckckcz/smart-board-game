@@ -42,7 +42,7 @@ ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS questions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   category TEXT NOT NULL CHECK (category IN ('C1', 'C2', 'C3', 'C4', 'C5', 'C6')),
-  type TEXT NOT NULL CHECK (type IN ('multiple_choice', 'true_false', 'essay', 'matching')),
+  type TEXT NOT NULL CHECK (type IN ('multiple_choice', 'true_false', 'essay', 'matching', 'short_answer')),
   question TEXT NOT NULL,
   image_url TEXT,
   -- For multiple choice
@@ -59,6 +59,12 @@ CREATE TABLE IF NOT EXISTS questions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- If the table already exists, ensure constraint includes short_answer
+ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_type_check;
+ALTER TABLE questions
+  ADD CONSTRAINT questions_type_check
+  CHECK (type IN ('multiple_choice', 'true_false', 'essay', 'matching', 'short_answer'));
 
 -- Insert sample questions
 INSERT INTO questions (category, type, question, correct_answer, time_limit, points) VALUES

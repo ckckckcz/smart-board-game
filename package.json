@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^4.4.0",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "ogl": "^1.0.11",
@@ -41,6 +42,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "vaul": "^1.1.2",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
@@ -52,5 +54,6 @@
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@9.15.6+sha512.139cab068fdf0b751268179ac5f909b5be72afb4a75c513d1905d151befc8977b593d3cf8671ed83d4d6637c5c94b98ffbce108125de4a5a27a31233601a99de"
 }

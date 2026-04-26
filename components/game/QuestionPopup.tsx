@@ -5,15 +5,47 @@ import { Clock, Check, HelpCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useGameStore } from '@/hooks/useGameStore';
+import { Question } from '@/types/game';
+
+function getCorrectAnswerText(q: Question): string {
+  switch (q.type) {
+    case 'true_false':
+      return q.correctAnswer === true ? 'Benar' : q.correctAnswer === false ? 'Salah' : '-';
+    case 'multiple_choice': {
+      const letter = String(q.correctAnswer || '').toUpperCase();
+      const idx = letter ? letter.charCodeAt(0) - 65 : -1;
+      const opt = q.options && idx >= 0 && idx < q.options.length ? q.options[idx] : '';
+      return opt ? `${letter}. ${opt}` : (letter || '-');
+    }
+    case 'matching':
+      return q.matchingAnswer || '-';
+    case 'short_answer':
+      return String(q.correctAnswer || '-');
+    default:
+      return '-';
+  }
+}
 
 const QuestionPopup = () => {
-  const { currentQuestion, answerQuestion, skipQuestion } = useGameStore();
+  const {
+    currentQuestion,
+    answerQuestion,
+    skipQuestion,
+    nextQuestion,
+    showFeedback,
+    lastAnswerStatus,
+    lastAnswerSimilarity,
+    lastStudentAnswer,
+  } = useGameStore();
   const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 30);
   const [isExiting, setIsExiting] = useState(false);
 
   // For different question types
   const [selectedAnswer, setSelectedAnswer] = useState<string | boolean | null>(null);
+  const [shortAnswerText, setShortAnswerText] = useState('');
+
   const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({
     '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
   });
@@ -22,13 +54,22 @@ const QuestionPopup = () => {
     if (!currentQuestion) return;
     setTimeLeft(currentQuestion.timeLimit);
     setSelectedAnswer(null);
+    setShortAnswerText('');
     setMatchingAnswers({
       '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
     });
     setIsExiting(false);
   }, [currentQuestion]);
 
+  const handleSkip = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      skipQuestion();
+    }, 300);
+  }, [skipQuestion]);
+
   useEffect(() => {
+    if (showFeedback) return;
     if (timeLeft <= 0) {
       handleSkip();
       return;
@@ -39,42 +80,44 @@ const QuestionPopup = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, handleSkip, showFeedback]);
 
   const handleAnswer = useCallback(() => {
     if (!currentQuestion) return;
-    setIsExiting(true);
-
-    setTimeout(() => {
-      switch (currentQuestion.type) {
-        case 'true_false':
-          if (selectedAnswer === null) return;
-          answerQuestion(selectedAnswer as boolean);
-          break;
-        case 'multiple_choice':
-          if (!selectedAnswer) return;
-          answerQuestion(selectedAnswer as string);
-          break;
-        case 'matching':
-          if (!currentQuestion.matchingLeft) return;
-          const answers = currentQuestion.matchingLeft.map((_, i) => {
-            const num = i + 1;
-            return `${num}${matchingAnswers[String(num)] || ''}`;
-          }).join('-');
-
-          if (currentQuestion.matchingLeft.some((_, i) => !matchingAnswers[String(i + 1)])) return;
-          answerQuestion(answers);
-          break;
+    switch (currentQuestion.type) {
+      case 'true_false':
+        if (selectedAnswer === null) return;
+        answerQuestion(selectedAnswer as boolean);
+        break;
+      case 'multiple_choice':
+        if (!selectedAnswer) return;
+        answerQuestion(selectedAnswer as string);
+        break;
+      case 'short_answer': {
+        const trimmed = shortAnswerText.trim();
+        if (!trimmed) return;
+        answerQuestion(trimmed);
+        break;
       }
-    }, 300);
-  }, [currentQuestion, selectedAnswer, matchingAnswers, answerQuestion]);
+      case 'matching':
+        if (!currentQuestion.matchingLeft) return;
+        const answers = currentQuestion.matchingLeft.map((_, i) => {
+          const num = i + 1;
+          return `${num}${matchingAnswers[String(num)] || ''}`;
+        }).join('-');
 
-  const handleSkip = useCallback(() => {
+        if (currentQuestion.matchingLeft.some((_, i) => !matchingAnswers[String(i + 1)])) return;
+        answerQuestion(answers);
+        break;
+    }
+  }, [currentQuestion, selectedAnswer, shortAnswerText, matchingAnswers, answerQuestion]);
+
+  const handleContinue = useCallback(() => {
     setIsExiting(true);
     setTimeout(() => {
-      skipQuestion();
-    }, 300);
-  }, [skipQuestion]);
+      nextQuestion();
+    }, 200);
+  }, [nextQuestion]);
 
   // Close without answering (user can try again later)
   const handleClose = useCallback(() => {
@@ -87,16 +130,29 @@ const QuestionPopup = () => {
 
   if (!currentQuestion) return null;
 
-  const timerPercentage = (timeLeft / currentQuestion.timeLimit) * 100;
+  const feedbackTitle = lastAnswerStatus === 'correct'
+    ? 'LUAR BIASA!'
+    : lastAnswerStatus === 'almost'
+      ? 'HAMPIR BENAR!'
+      : 'OOPS!';
+
+  const feedbackSubtitle = lastAnswerStatus === 'correct'
+    ? `+${currentQuestion.points} poin`
+    : currentQuestion.type === 'short_answer'
+      ? (lastAnswerStatus === 'almost' ? 'Makna jawaban kamu mirip' : 'Makna jawaban kamu berbeda')
+      : 'Jawaban kamu belum tepat';
+
   const isUrgent = timeLeft <= 10;
-  const timerBgColor = isUrgent ? 'bg-rose-500' : timeLeft <= 20 ? 'bg-amber-500' : 'bg-emerald-500';
 
   const canAnswer = () => {
+    if (showFeedback) return false;
     switch (currentQuestion.type) {
       case 'true_false':
         return selectedAnswer !== null;
       case 'multiple_choice':
         return !!selectedAnswer;
+      case 'short_answer':
+        return shortAnswerText.trim().length > 0;
       case 'matching':
         if (!currentQuestion.matchingLeft) return false;
         return currentQuestion.matchingLeft.every((_, i) => !!matchingAnswers[String(i + 1)]);
@@ -150,18 +206,84 @@ const QuestionPopup = () => {
           </button>
         </div>
 
-        {/* Timer Progress Bar */}
-        <div className="h-1 w-full bg-slate-200 shrink-0">
-          <div
-            className={`h-full transition-all duration-1000 ease-linear ${timerBgColor}`}
-            style={{ width: `${timerPercentage}%` }}
-          />
-        </div>
+        {/* Timer Progress Bar removed */}
 
         {/* Main Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
+          {showFeedback && (
+            <div className="p-4">
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                {lastAnswerStatus === 'correct' ? (
+                  <div className="px-4 py-3 font-black text-white text-center bg-emerald-600">
+                    <div className="text-xl tracking-tight">{feedbackTitle}</div>
+                    <div className="text-xs font-bold text-white/90 mt-0.5">{feedbackSubtitle}</div>
+                    {/* {currentQuestion.type === 'short_answer' && lastAnswerSimilarity !== null && (
+                      <div className="text-[11px] font-bold text-white/90 mt-1">
+                        Skor makna: {Math.round(lastAnswerSimilarity * 100)}%
+                      </div>
+                    )} */}
+                  </div>
+                ) : lastAnswerStatus === 'almost' ? (
+                  <div className="px-4 py-3 font-black text-white text-center bg-amber-600">
+                    <div className="text-xl tracking-tight">{feedbackTitle}</div>
+                    <div className="text-xs font-bold text-white/90 mt-0.5">{feedbackSubtitle}</div>
+                    {/* {currentQuestion.type === 'short_answer' && lastAnswerSimilarity !== null && (
+                      <div className="text-[11px] font-bold text-white/90 mt-1">
+                        Skor makna: {Math.round(lastAnswerSimilarity * 100)}%
+                      </div>
+                    )} */}
+                  </div>
+                ) : (
+                  <div className="px-4 py-3 font-black text-white text-center bg-rose-600">
+                    <div className="text-xl tracking-tight">{feedbackTitle}</div>
+                    <div className="text-xs font-bold text-white/90 mt-0.5">{feedbackSubtitle}</div>
+                    {/* {currentQuestion.type === 'short_answer' && lastAnswerSimilarity !== null && (
+                      <div className="text-[11px] font-bold text-white/90 mt-1">
+                        Skor makna: {Math.round(lastAnswerSimilarity * 100)}%
+                      </div>
+                    )} */}
+                  </div>
+                )}
+
+                <div className="p-4 space-y-3">
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                      Jawaban Kamu
+                    </div>
+                    <div className="text-sm font-bold text-slate-800 whitespace-pre-wrap break-words">
+                      {lastStudentAnswer || '-'}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1">
+                      Jawaban Benar
+                    </div>
+                    <div className="text-sm font-bold text-emerald-900 whitespace-pre-wrap break-words">
+                      {getCorrectAnswerText(currentQuestion)}
+                    </div>
+                  </div>
+
+                  {/* Explanation panel — shown for ALL types when wrong/almost */}
+                  {lastAnswerStatus !== 'correct' && (
+                    (currentQuestion.explanation || currentQuestion.matchingExplanation) && (
+                      <div className="rounded-xl bg-amber-50 border border-amber-200 p-3">
+                        <div className="text-[10px] font-black uppercase tracking-wider text-amber-700 mb-1.5 flex items-center gap-1">
+                          💡 Penjelasan
+                        </div>
+                        <div className="text-sm font-semibold text-amber-900 leading-relaxed whitespace-pre-wrap break-words">
+                          {currentQuestion.matchingExplanation || currentQuestion.explanation}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Question Image - LARGER & PROMINENT */}
-          {hasImage && (
+          {!showFeedback && hasImage && (
             <div className="bg-slate-100 p-2">
               {(currentQuestion.imageUrls && currentQuestion.imageUrls.length > 0) ? (
                 <div className="space-y-2">
@@ -188,148 +310,175 @@ const QuestionPopup = () => {
           )}
 
           {/* Question Text */}
-          <div className="p-3 sm:p-4">
-            <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200">
-              <p className="text-sm sm:text-base md:text-lg font-bold text-slate-800 leading-relaxed text-center">
-                {currentQuestion.question}
-              </p>
+          {!showFeedback && (
+            <div className="p-3 sm:p-4">
+              <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200">
+                <p className="text-sm sm:text-base md:text-lg font-bold text-slate-800 leading-relaxed text-center">
+                  {currentQuestion.question}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Answer Area */}
-          <div className="px-3 sm:px-4 pb-3">
-            {currentQuestion.type === 'true_false' && (
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setSelectedAnswer(true)}
-                  className={`
+          {!showFeedback && (
+            <div className="px-3 sm:px-4 pb-3">
+              {currentQuestion.type === 'true_false' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setSelectedAnswer(true)}
+                    className={`
                       py-3 px-4 rounded-xl border-2 font-bold text-base transition-all duration-200 cursor-pointer
                       ${selectedAnswer === true
-                      ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                      : 'border-slate-200 bg-white hover:border-emerald-400 text-slate-600 hover:text-emerald-600'
-                    }
+                        ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                        : 'border-slate-200 bg-white hover:border-emerald-400 text-slate-600 hover:text-emerald-600'
+                      }
                     `}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {selectedAnswer === true && <Check className="w-5 h-5" />}
-                    BENAR
-                  </span>
-                </button>
-                <button
-                  onClick={() => setSelectedAnswer(false)}
-                  className={`
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      {selectedAnswer === true && <Check className="w-5 h-5" />}
+                      BENAR
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedAnswer(false)}
+                    className={`
                       py-3 px-4 rounded-xl border-2 font-bold text-base transition-all duration-200 cursor-pointer
                       ${selectedAnswer === false
-                      ? 'border-rose-500 bg-rose-500 text-white shadow-lg shadow-rose-500/30'
-                      : 'border-slate-200 bg-white hover:border-rose-400 text-slate-600 hover:text-rose-600'
-                    }
+                        ? 'border-rose-500 bg-rose-500 text-white shadow-lg shadow-rose-500/30'
+                        : 'border-slate-200 bg-white hover:border-rose-400 text-slate-600 hover:text-rose-600'
+                      }
                     `}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {selectedAnswer === false && <Check className="w-5 h-5" />}
-                    SALAH
-                  </span>
-                </button>
-              </div>
-            )}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      {selectedAnswer === false && <Check className="w-5 h-5" />}
+                      SALAH
+                    </span>
+                  </button>
+                </div>
+              )}
 
-            {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-              <div className="space-y-2">
-                {currentQuestion.options.map((optionText, index) => {
-                  const optionLabel = ['A', 'B', 'C', 'D', 'E'][index];
-                  return (
-                    <button
-                      key={optionLabel}
-                      onClick={() => setSelectedAnswer(optionLabel)}
-                      className={`
+              {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
+                <div className="space-y-2">
+                  {currentQuestion.options.map((optionText, index) => {
+                    const optionLabel = ['A', 'B', 'C', 'D', 'E'][index];
+                    return (
+                      <button
+                        key={optionLabel}
+                        onClick={() => setSelectedAnswer(optionLabel)}
+                        className={`
                           w-full p-2.5 sm:p-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-3 active:scale-[0.98]
                           ${selectedAnswer === optionLabel
-                          ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                          : 'border-slate-200 bg-white hover:border-blue-300 text-slate-700'
-                        }
+                            ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                            : 'border-slate-200 bg-white hover:border-blue-300 text-slate-700'
+                          }
                         `}
-                    >
-                      <div className={`
+                      >
+                        <div className={`
                           w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0
                           ${selectedAnswer === optionLabel ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}
                         `}>
-                        {optionLabel}
-                      </div>
-                      <span className="text-sm sm:text-base font-semibold leading-snug flex-1">{optionText}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {currentQuestion.type === 'matching' && currentQuestion.matchingLeft && (
-              <div className="space-y-2">
-                {currentQuestion.matchingLeft.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
-                    {/* LEFT SIDE */}
-                    <div className="flex-1 flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
-                        {index + 1}
-                      </div>
-
-                      {item.image ? (
-                        <div className="w-32 h-24 sm:w-40 sm:h-28 rounded-lg overflow-hidden border-2 border-slate-200 bg-white shrink-0 shadow-sm">
-                          <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain p-0.5" />
+                          {optionLabel}
                         </div>
-                      ) : (
-                        <span className="text-sm sm:text-base font-bold text-slate-700 ml-1 break-words leading-tight">
-                          {item.text}
-                        </span>
-                      )}
-                    </div>
+                        <span className="text-sm sm:text-base font-semibold leading-snug flex-1">{optionText}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-                    {/* CONNECTING ICON */}
-                    <HelpCircle className="w-4 h-4 text-slate-300 shrink-0" />
+              {currentQuestion.type === 'short_answer' && (
+                <div className="space-y-2">
+                  <Textarea
+                    value={shortAnswerText}
+                    onChange={(e) => setShortAnswerText(e.target.value)}
+                    placeholder="Ketik jawaban singkat kamu di sini..."
+                    className="min-h-[110px] resize-none bg-white border-2 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 text-base font-bold rounded-xl"
+                  />
+                  <p className="text-[11px] text-slate-500 font-semibold text-center">
+                    Sistem akan menilai kemiripan jawaban.
+                  </p>
+                </div>
+              )}
 
-                    {/* RIGHT SIDE: Select */}
-                    <div className="w-32 sm:w-48 shrink-0">
-                      <Select
-                        value={matchingAnswers[String(index + 1)] || ''}
-                        onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
-                      >
-                        <SelectTrigger className="bg-white border-2 border-slate-200 text-slate-900 min-h-[2.25rem] h-auto py-2 rounded-lg font-bold text-sm focus:ring-blue-500 focus:border-blue-500 text-left">
-                          <SelectValue placeholder="Pilih" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border border-slate-200 text-slate-900 rounded-xl shadow-xl">
-                          {(currentQuestion.matchingRight || []).map((choice, i) => {
-                            const label = String.fromCharCode(65 + i);
-                            return (
-                              <SelectItem key={label} value={label} className="font-semibold py-2 rounded-lg text-sm">
-                                <span className="text-blue-600 mr-1 font-bold shrink-0">{label}.</span>
-                                <span className="whitespace-normal break-words">{choice}</span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+              {currentQuestion.type === 'matching' && currentQuestion.matchingLeft && (
+                <div className="space-y-2">
+                  {currentQuestion.matchingLeft.map((item, index) => (
+                    <div key={index} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
+                      {/* LEFT SIDE */}
+                      <div className="flex-1 flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                          {index + 1}
+                        </div>
+
+                        {item.image ? (
+                          <div className="w-32 h-24 sm:w-40 sm:h-28 rounded-lg overflow-hidden border-2 border-slate-200 bg-white shrink-0 shadow-sm">
+                            <img src={item.image} alt={`Item ${index + 1}`} className="w-full h-full object-contain p-0.5" />
+                          </div>
+                        ) : (
+                          <span className="text-sm sm:text-base font-bold text-slate-700 ml-1 break-words leading-tight">
+                            {item.text}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* CONNECTING ICON */}
+                      <HelpCircle className="w-4 h-4 text-slate-300 shrink-0" />
+
+                      {/* RIGHT SIDE: Select */}
+                      <div className="w-32 sm:w-48 shrink-0">
+                        <Select
+                          value={matchingAnswers[String(index + 1)] || ''}
+                          onValueChange={(v) => setMatchingAnswers(prev => ({ ...prev, [String(index + 1)]: v }))}
+                        >
+                          <SelectTrigger className="bg-white border-2 border-slate-200 text-slate-900 min-h-[2.25rem] h-auto py-2 rounded-lg font-bold text-sm focus:ring-blue-500 focus:border-blue-500 text-left">
+                            <SelectValue placeholder="Pilih" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-slate-200 text-slate-900 rounded-xl shadow-xl">
+                            {(currentQuestion.matchingRight || []).map((choice, i) => {
+                              const label = String.fromCharCode(65 + i);
+                              return (
+                                <SelectItem key={label} value={label} className="font-semibold py-2 rounded-lg text-sm">
+                                  <span className="text-blue-600 mr-1 font-bold shrink-0">{label}.</span>
+                                  <span className="whitespace-normal break-words">{choice}</span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer Actions - Fixed at bottom */}
         <div className="p-3 border-t border-slate-200 bg-slate-50 shrink-0">
-          <Button
-            onClick={handleAnswer}
-            disabled={!canAnswer()}
-            className={`
-              w-full h-12 text-base font-bold rounded-xl text-white shadow-lg cursor-pointer transition-all
-              ${!canAnswer()
-                ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-500/30 active:scale-[0.98]'
-              }
-            `}
-          >
-            SIMPAN JAWABAN
-          </Button>
+          {showFeedback ? (
+            <Button
+              onClick={handleContinue}
+              className="w-full h-12 text-base font-bold rounded-xl text-white shadow-lg cursor-pointer transition-all bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-500/30 active:scale-[0.98]"
+            >
+              LANJUT
+            </Button>
+          ) : (
+            <Button
+              onClick={handleAnswer}
+              disabled={!canAnswer()}
+              className={`
+                w-full h-12 text-base font-bold rounded-xl text-white shadow-lg cursor-pointer transition-all
+                ${!canAnswer()
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                  : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-500/30 active:scale-[0.98]'
+                }
+              `}
+            >
+              SIMPAN JAWABAN
+            </Button>
+          )}
         </div>
       </div>
     </div>

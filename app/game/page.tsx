@@ -6,7 +6,6 @@ import { User, X, CheckCircle, Lock, Flag, Volume2, VolumeX } from 'lucide-react
 import { useGameStore } from '@/hooks/useGameStore';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import QuestionPopup from '@/components/game/QuestionPopup';
-import FeedbackBanner from '@/components/game/FeedbackBanner';
 import { Progress } from '@/components/ui/progress';
 import styles from '../common.module.css';
 
@@ -27,7 +26,12 @@ export default function GameBoard() {
 
     // Get the set function to clear feedback on mount
     const clearFeedbackOnMount = useCallback(() => {
-        useGameStore.setState({ showFeedback: false, lastAnswerCorrect: null });
+        useGameStore.setState({
+            showFeedback: false,
+            lastAnswerCorrect: null,
+            lastAnswerStatus: null,
+            lastAnswerSimilarity: null,
+        });
     }, []);
 
     const {
@@ -350,9 +354,7 @@ export default function GameBoard() {
                     )}
 
                     {showFeedback && (
-                        <div style={{ width: '100%' }}>
-                            <FeedbackBanner />
-                        </div>
+                        <div style={{ width: '100%' }} />
                     )}
                 </div>
             </main>
@@ -362,7 +364,7 @@ export default function GameBoard() {
             <div className={styles.bottomStrip} />
 
             {/* Question Popup */}
-            {currentQuestion && !showFeedback && <QuestionPopup />}
+            {currentQuestion && <QuestionPopup />}
         </div>
     );
 }

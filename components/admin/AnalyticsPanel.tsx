@@ -1,6 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react';
-import { Trash2, Trophy, Users, Target, Award, Medal, Filter, Pencil, Check, X } from 'lucide-react';
+import { Trash2, Trophy, Users, Target, Award, Medal, Filter, Pencil, Check, X, Download } from 'lucide-react';
+import type { WorkBook, WorkSheet, CellObject, Range } from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +14,7 @@ const AnalyticsPanel = () => {
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState<string>('');
   const [isSavingName, setIsSavingName] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const sortedRounds = useMemo(() => sortRoundsForDisplay(rounds), [rounds]);
 
@@ -79,6 +81,161 @@ const AnalyticsPanel = () => {
   // Sort all players by score (show all, not limited to 20)
   const sortedLeaderboard = [...filteredLeaderboard].sort((a, b) => b.score - a.score);
 
+  const sanitizeSheetName = (name: string) => {
+    // Excel sheet name constraints: max 31 chars, cannot contain : \/ ? * [ ]
+    const cleaned = name.replace(/[\\/\?\*\[\]:]/g, ' ').replace(/\s+/g, ' ').trim();
+    return (cleaned || 'Babak').slice(0, 31);
+  };
+
+  const exportToExcel = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+
+    try {
+      const XLSX: typeof import('xlsx') = await import('xlsx');
+      const templateUrl = '/Template%20Laporan%20Siswa.xlsx';
+      const templateRes = await fetch(templateUrl);
+      if (!templateRes.ok) throw new Error('Gagal mengambil template Excel.');
+
+      const templateBuf = await templateRes.arrayBuffer();
+      const templateWb = XLSX.read(new Uint8Array(templateBuf), { type: 'array' });
+      const templateSheetName = templateWb.SheetNames[0] || 'Lembar1';
+      const templateWs = templateWb.Sheets[templateSheetName];
+
+      const cloneWorksheet = (ws: WorkSheet): WorkSheet => {
+        const out: WorkSheet = {};
+        for (const key of Object.keys(ws)) {
+          const value = (ws as Record<string, unknown>)[key];
+          if (key.startsWith('!')) {
+            if (Array.isArray(value)) out[key] = value.slice();
+            else if (value && typeof value === 'object') out[key] = { ...value };
+            else out[key] = value;
+            continue;
+          }
+
+          // cell object
+          out[key] = value && typeof value === 'object' ? { ...value } : value;
+        }
+        return out;
+      };
+
+      const writeTableToWorksheet = (ws: WorkSheet, rows: Array<[string, number, number, number]>) => {
+        // Template header is in B2:E2 (0-based: c=1..4, r=1). Data starts at B3.
+        const headerRow = 1;
+        const startRow = 2;
+        const startCol = 1;
+
+        const headers: Array<[string, 's' | 'n']> = [
+          ['Nama', 's'],
+          ['Benar', 's'],
+          ['Salah', 's'],
+          ['Poin', 's'],
+        ];
+
+        headers.forEach(([value, t], idx) => {
+          const addr = XLSX.utils.encode_cell({ c: startCol + idx, r: headerRow });
+          const existing = (ws[addr] || {}) as CellObject;
+          ws[addr] = { ...existing, t, v: value } as CellObject;
+        });
+
+        rows.forEach((row, rowIndex) => {
+          const excelRow = startRow + rowIndex;
+          row.forEach((value, colIndex) => {
+            const addr = XLSX.utils.encode_cell({ c: startCol + colIndex, r: excelRow });
+            const existing = (ws[addr] || {}) as CellObject;
+            const isNumber = typeof value === 'number' && Number.isFinite(value);
+            ws[addr] = { ...existing, t: isNumber ? 'n' : 's', v: value } as CellObject;
+          });
+        });
+
+        // Ensure worksheet ref includes written rows (do not shrink the template range)
+        const currentRef = ws['!ref'] || 'B2:E26';
+        const range = XLSX.utils.decode_range(currentRef) as Range;
+        const lastNeededRow = startRow + Math.max(rows.length - 1, 0);
+        if (lastNeededRow > range.e.r) range.e.r = lastNeededRow;
+        ws['!ref'] = XLSX.utils.encode_range(range);
+      };
+
+      const playersForRound = (roundId: string) => {
+        return leaderboard
+          .filter((p) => p.roundId === roundId)
+          .slice()
+          .sort((a, b) => b.score - a.score);
+      };
+
+      const createWorkbookForRound = (roundId: string, roundName: string) => {
+        const wb = XLSX.utils.book_new() as WorkBook;
+        const ws = cloneWorksheet(templateWs);
+
+        const rows = playersForRound(roundId).map((p) => [
+          p.name,
+          p.correctAnswers,
+          p.wrongAnswers,
+          p.score,
+        ] as [string, number, number, number]);
+
+        writeTableToWorksheet(ws, rows);
+        XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(roundName));
+        return wb;
+      };
+
+      const downloadWorkbook = (wb: WorkBook, filename: string) => {
+        const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([out], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      };
+
+      if (selectedRound !== 'all') {
+        const roundName = getRoundName(selectedRound);
+        const wb = createWorkbookForRound(selectedRound, roundName);
+        downloadWorkbook(wb, `Laporan - ${roundName}.xlsx`);
+        return;
+      }
+
+      // Export all rounds into one workbook (one sheet per round)
+      const wbAll = XLSX.utils.book_new() as WorkBook;
+      const usedNames = new Set<string>();
+
+      sortedRounds.forEach((round) => {
+        const ws = cloneWorksheet(templateWs);
+        const rows = playersForRound(round.id).map((p) => [
+          p.name,
+          p.correctAnswers,
+          p.wrongAnswers,
+          p.score,
+        ] as [string, number, number, number]);
+
+        writeTableToWorksheet(ws, rows);
+        let sheetName = sanitizeSheetName(round.name);
+        if (!sheetName) sheetName = 'Babak';
+        if (usedNames.has(sheetName)) {
+          let i = 2;
+          while (usedNames.has(`${sheetName} (${i})`)) i++;
+          sheetName = `${sheetName} (${i})`;
+        }
+        usedNames.add(sheetName);
+        XLSX.utils.book_append_sheet(wbAll, ws, sheetName);
+      });
+
+      downloadWorkbook(wbAll, 'Laporan - Semua Babak.xlsx');
+    } catch (e) {
+      console.error(e);
+      alert(e instanceof Error ? e.message : 'Gagal export Excel.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-scale-in">
       {/* Stats Cards */}
@@ -137,12 +294,12 @@ const AnalyticsPanel = () => {
             )}
           </h3>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {/* Round Filter */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Filter className="w-4 h-4 text-slate-400" />
               <Select value={selectedRound} onValueChange={setSelectedRound}>
-                <SelectTrigger className="w-[200px] bg-white border border-border text-slate-900 h-9">
+                <SelectTrigger className="w-full sm:w-[200px] bg-white border border-border text-slate-900 h-9">
                   <SelectValue placeholder="Filter Babak" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-border text-slate-900">
@@ -156,6 +313,17 @@ const AnalyticsPanel = () => {
               </Select>
             </div>
 
+            <Button
+              onClick={exportToExcel}
+              variant="outline"
+              size="sm"
+              className="bg-white w-full sm:w-auto"
+              disabled={isExporting || rounds.length === 0}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {isExporting ? 'Mengekspor...' : 'Export Excel'}
+            </Button>
+
             {leaderboard.length > 0 && (
               <Button
                 onClick={() => {
@@ -165,7 +333,7 @@ const AnalyticsPanel = () => {
                 }}
                 variant="ghost"
                 size="sm"
-                className="text-rose-500 hover:bg-rose-50 cursor-pointer"
+                className="text-rose-500 hover:bg-rose-50 cursor-pointer w-full sm:w-auto justify-center sm:justify-start"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Hapus Semua
