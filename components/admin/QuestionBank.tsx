@@ -20,6 +20,7 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   true_false: 'Benar/Salah',
   matching: 'Menjodohkan',
   short_answer: 'Singkat',
+  essay: 'Esai',
 };
 
 // Simple category labels (C1-C6 only)
@@ -83,6 +84,7 @@ const QuestionBank = () => {
 
   // Short Answer (Singkat)
   const [shortAnswerKey, setShortAnswerKey] = useState('');
+  const [essayInstructions, setEssayInstructions] = useState('');
 
   // Matching (Simplified Logic for Flex Counts)
   const [matchingLeftInput, setMatchingLeftInput] = useState<MatchingLeftItem[]>([
@@ -183,6 +185,7 @@ const QuestionBank = () => {
     setCorrectOption('');
     setTrueFalseAnswer('');
     setShortAnswerKey('');
+    setEssayInstructions('');
     setExplanation('');
     setMatchingLeftInput([
       { text: '' }, { text: '' }, { text: '' }
@@ -214,6 +217,10 @@ const QuestionBank = () => {
 
     if (explanation.trim()) {
       newQuestion.explanation = explanation.trim();
+    }
+
+    if (type === 'essay') {
+      newQuestion.requiresImageAnswer = true;
     }
 
     // Add images if provided
@@ -251,6 +258,14 @@ const QuestionBank = () => {
           return;
         }
         newQuestion.correctAnswer = shortAnswerKey.trim();
+        break;
+
+      case 'essay':
+        if (!trimmedQuestion) {
+          toast.error('Pertanyaan esai wajib diisi!');
+          return;
+        }
+        newQuestion.requiresImageAnswer = true;
         break;
 
       case 'matching':
@@ -296,6 +311,8 @@ const QuestionBank = () => {
           : <span className="text-sm font-bold text-rose-600">Salah</span>;
       case 'short_answer':
         return <span className="text-sm font-bold text-slate-700">{String(q.correctAnswer || '-')}</span>;
+      case 'essay':
+        return <span className="text-sm font-bold text-blue-600">Gambar</span>;
       case 'matching':
         return (
           <div className="flex flex-col items-center">
@@ -525,6 +542,21 @@ const QuestionBank = () => {
                 />
                 <p className="text-[11px] text-slate-500 font-semibold">
                   Penilaian pakai kemiripan teks: ≥85% benar, 60–84% hampir benar, &lt;60% salah.
+                </p>
+              </div>
+            )}
+
+            {type === 'essay' && (
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Petunjuk Esai</Label>
+                <Textarea
+                  value={essayInstructions}
+                  onChange={(e) => setEssayInstructions(e.target.value)}
+                  placeholder="Tulis pertanyaan esai. Siswa akan menjawab dengan foto saja."
+                  className="min-h-[90px] resize-none bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400"
+                />
+                <p className="text-[11px] text-blue-700 font-semibold">
+                  Esai tidak pakai jawaban kunci. Siswa upload gambar, lalu guru memberi poin manual.
                 </p>
               </div>
             )}
@@ -904,8 +936,7 @@ const QuestionBank = () => {
 
           {/* Modal Card */}
           <div
-            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-border overflow-hidden"
-            style={{ animation: 'fadeSlideUp 0.2s ease-out' }}
+            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-border overflow-hidden animate-[fadeSlideUp_0.2s_ease-out]"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-7 py-5 bg-amber-50 border-b border-amber-100">
@@ -923,6 +954,7 @@ const QuestionBank = () => {
               <button
                 onClick={() => setExplanationModalId(null)}
                 className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-amber-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                title="Tutup modal"
               >
                 <X className="w-5 h-5" />
               </button>

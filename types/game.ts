@@ -1,6 +1,8 @@
 export type QuestionCategory = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
 
-export type QuestionType = 'multiple_choice' | 'true_false' | 'matching' | 'short_answer';
+export type QuestionType = 'multiple_choice' | 'true_false' | 'matching' | 'short_answer' | 'essay';
+
+export type ManualImageAnswerKind = 'short_answer' | 'essay';
 
 export interface MatchingPair {
   left: string;
@@ -20,11 +22,14 @@ export interface Question {
   question: string;
   imageUrl?: string; // Optional image for each question
   imageUrls?: string[]; // Multiple images support (up to 3)
+  shortAnswerImageMaxCount?: number;
   explanation?: string; // Optional explanation shown in feedback
   // For multiple choice
   options?: string[];
   // For true/false, multiple choice (letter), and short answer (string)
   correctAnswer?: string | boolean;
+  // For essay/image submissions, the answer is reviewed manually from uploaded images
+  requiresImageAnswer?: boolean;
   // For matching (Flexible: independent left/right counts)
   matchingLeft?: MatchingLeftItem[];
   matchingRight?: string[];
@@ -39,6 +44,7 @@ export interface Round {
   name: string;
   questionCounts: Record<QuestionCategory, number>;
   totalQuestions: number;
+  allowedQuestionTypes?: QuestionType[];
 }
 
 export interface Player {
@@ -57,11 +63,11 @@ export interface GameState {
   currentQuestion: Question | null;
   currentQuestionIndex: number;
   questions: Question[];
-  answeredQuestions: Record<string, 'correct' | 'wrong'>; // Track answered questions with result
+  answeredQuestions: Record<string, 'correct' | 'wrong' | 'almost' | 'pending'>; // Track answered questions with result
   isPlaying: boolean;
   showFeedback: boolean;
   lastAnswerCorrect: boolean | null;
-  lastAnswerStatus: 'correct' | 'almost' | 'wrong' | null;
+  lastAnswerStatus: 'correct' | 'almost' | 'wrong' | 'pending' | null;
   lastAnswerSimilarity: number | null; // 0..1, only used for short_answer
   lastStudentAnswer: string | null;
   gameComplete: boolean;
@@ -70,6 +76,23 @@ export interface GameState {
 
 export interface AdminSettings {
   pin: string;
+}
+
+export interface ManualImageAnswerSubmission {
+  id: string;
+  playerId: string;
+  playerName: string;
+  roundId: string | null;
+  roundName?: string;
+  questionId: string | null;
+  questionType: ManualImageAnswerKind;
+  questionText: string;
+  imageUrls: string[];
+  reviewPoints: number | null;
+  scoreApplied: boolean;
+  status: 'pending' | 'reviewed' | 'rejected';
+  createdAt: Date;
+  reviewedAt?: Date;
 }
 
 export interface GameStats {

@@ -1,22 +1,44 @@
 'use client'
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2, Trophy, Users, Target, Award, Medal, Filter, Pencil, Check, X, Download } from 'lucide-react';
 import type { WorkBook, WorkSheet, CellObject, Range } from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGameStore } from '@/hooks/useGameStore';
 import { sortRoundsForDisplay } from '@/lib/rounds';
 
 const AnalyticsPanel = () => {
-  const { leaderboard, clearLeaderboard, rounds, renamePlayer } = useGameStore();
+  const {
+    leaderboard,
+    clearLeaderboard,
+    rounds,
+    renamePlayer,
+    manualImageAnswerSubmissions,
+    reviewManualImageAnswerSubmission,
+    refreshManualImageAnswerSubmissions,
+  } = useGameStore();
   const [selectedRound, setSelectedRound] = useState<string>('all');
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState<string>('');
   const [isSavingName, setIsSavingName] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [reviewSubmissionId, setReviewSubmissionId] = useState<string | null>(null);
+  const [draftPoints, setDraftPoints] = useState<string>('');
+  const [isSavingReview, setIsSavingReview] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const sortedRounds = useMemo(() => sortRoundsForDisplay(rounds), [rounds]);
+
+  useEffect(() => {
+    refreshManualImageAnswerSubmissions();
+  }, [refreshManualImageAnswerSubmissions]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Filter leaderboard by round
   const filteredLeaderboard = selectedRound === 'all'
@@ -34,6 +56,35 @@ const AnalyticsPanel = () => {
   const topPlayer = totalGames > 0
     ? filteredLeaderboard.reduce((best, p) => p.score > best.score ? p : best, filteredLeaderboard[0])
     : null;
+
+  const essaySubmissionsByPlayer = useMemo(() => {
+    return manualImageAnswerSubmissions.reduce<Record<string, typeof manualImageAnswerSubmissions>>((acc, submission) => {
+      if (submission.questionType !== 'essay') return acc;
+      const submissionKey = `${submission.roundId || 'all'}::${submission.playerName.trim().toLowerCase()}`;
+      const list = acc[submissionKey] || [];
+      acc[submissionKey] = [...list, submission];
+      return acc;
+    }, {});
+  }, [manualImageAnswerSubmissions]);
+
+  const selectedReviewSubmission = useMemo(() => {
+    if (!reviewSubmissionId) return null;
+    return manualImageAnswerSubmissions.find((submission) => submission.id === reviewSubmissionId) || null;
+  }, [manualImageAnswerSubmissions, reviewSubmissionId]);
+
+  const selectedReviewGroup = useMemo(() => {
+    if (!selectedReviewSubmission) return [];
+    const groupKey = getEssaySubmissionKey(selectedReviewSubmission.playerName, selectedReviewSubmission.roundId || '');
+    return manualImageAnswerSubmissions.filter((submission) => {
+      if (submission.questionType !== 'essay') return false;
+      return getEssaySubmissionKey(submission.playerName, submission.roundId || '') === groupKey;
+    });
+  }, [manualImageAnswerSubmissions, selectedReviewSubmission]);
+
+  const selectedReviewIndex = useMemo(() => {
+    if (!selectedReviewSubmission) return -1;
+    return selectedReviewGroup.findIndex((submission) => submission.id === selectedReviewSubmission.id);
+  }, [selectedReviewGroup, selectedReviewSubmission]);
 
   const getMedalIcon = (rank: number) => {
     switch (rank) {
@@ -53,15 +104,63 @@ const AnalyticsPanel = () => {
     return round?.name || roundId;
   };
 
+  function getEssaySubmissionKey(playerName: string, roundId: string) {
+    return `${roundId || 'all'}::${playerName.trim().toLowerCase()}`;
+  }
+
   const startEditName = (playerId: string, currentName: string) => {
     setEditingPlayerId(playerId);
     setDraftName(currentName);
+  };
+
+  const openEssayReview = (playerName: string, roundId: string) => {
+    const submissions = essaySubmissionsByPlayer[getEssaySubmissionKey(playerName, roundId)] || [];
+    const submission = submissions.find((item) => item.status === 'pending') || submissions[0];
+    if (!submission) return;
+
+    setReviewSubmissionId(submission.id);
+    setDraftPoints(String(submission.reviewPoints ?? ''));
+  };
+
+  const selectReviewSubmission = (submissionId: string) => {
+    const submission = manualImageAnswerSubmissions.find((item) => item.id === submissionId);
+    if (!submission) return;
+
+    setReviewSubmissionId(submission.id);
+    setDraftPoints(String(submission.reviewPoints ?? ''));
   };
 
   const cancelEditName = () => {
     setEditingPlayerId(null);
     setDraftName('');
     setIsSavingName(false);
+  };
+
+  const closeReview = () => {
+    setReviewSubmissionId(null);
+    setDraftPoints('');
+    setIsSavingReview(false);
+  };
+
+  const saveReview = async () => {
+    if (!selectedReviewSubmission) return;
+    const points = Number(draftPoints);
+    if (!Number.isFinite(points)) return;
+
+    const reviewQueue = selectedReviewGroup;
+    setIsSavingReview(true);
+    const ok = await reviewManualImageAnswerSubmission(selectedReviewSubmission.id, points);
+    setIsSavingReview(false);
+
+    if (ok) {
+      const nextPending = reviewQueue.find((submission) => submission.id !== selectedReviewSubmission.id && submission.status === 'pending');
+      if (nextPending) {
+        setReviewSubmissionId(nextPending.id);
+        setDraftPoints(String(nextPending.reviewPoints ?? ''));
+      } else {
+        closeReview();
+      }
+    }
   };
 
   const saveEditName = async (playerId: string) => {
@@ -398,6 +497,15 @@ const AnalyticsPanel = () => {
                   ) : (
                     <div className="flex items-center gap-2 min-w-0">
                       <p className="font-bold text-slate-900 truncate">{player.name}</p>
+                      {(essaySubmissionsByPlayer[getEssaySubmissionKey(player.name, player.roundId)] || []).length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => openEssayReview(player.name, player.roundId)}
+                          className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-700 border border-blue-200 shrink-0"
+                        >
+                          Esai {(essaySubmissionsByPlayer[getEssaySubmissionKey(player.name, player.roundId)] || []).length}
+                        </button>
+                      )}
                       <Button
                         type="button"
                         variant="ghost"
@@ -433,6 +541,99 @@ const AnalyticsPanel = () => {
               {selectedRound !== 'all' && ` di ${getRoundName(selectedRound)}`}
             </p>
           </div>
+        )}
+
+        {isMounted && selectedReviewSubmission && createPortal(
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeReview} />
+            <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-border overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 bg-blue-50 border-b border-blue-100">
+                <div>
+                  <div className="text-sm font-black uppercase tracking-wider text-blue-700">Review Esai</div>
+                  <div className="text-xs text-slate-500 font-medium">
+                    {selectedReviewSubmission.playerName}
+                    {selectedReviewGroup.length > 1 ? ` • ${selectedReviewIndex + 1}/${selectedReviewGroup.length}` : ''}
+                  </div>
+                </div>
+                <button onClick={closeReview} title="Tutup review" className="w-9 h-9 rounded-full hover:bg-blue-100 flex items-center justify-center text-slate-500 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Soal</div>
+                  <div className="text-sm font-semibold text-slate-800 whitespace-pre-wrap">{selectedReviewSubmission.questionText}</div>
+                </div>
+
+                {selectedReviewGroup.length > 1 && (
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-3">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 mb-2">
+                      Daftar Esai ({selectedReviewGroup.length})
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedReviewGroup.map((submission, index) => (
+                        <button
+                          key={submission.id}
+                          type="button"
+                          onClick={() => selectReviewSubmission(submission.id)}
+                          className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${
+                            submission.id === selectedReviewSubmission.id
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:text-blue-700'
+                          }`}
+                        >
+                          Esai {index + 1}
+                          <span className="ml-2 font-semibold opacity-80">{submission.status}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {selectedReviewSubmission.imageUrls.map((url, index) => (
+                    <div key={index} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                      <img src={url} alt={`Jawaban esai ${index + 1}`} className="h-44 w-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-slate-200 p-4 bg-white">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Status</div>
+                    <div className="text-sm font-bold text-blue-700 capitalize">{selectedReviewSubmission.status}</div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 p-4 bg-white">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Poin Guru</div>
+                    <Input
+                      type="number"
+                      value={draftPoints}
+                      onChange={(e) => setDraftPoints(e.target.value)}
+                      placeholder="Isi poin"
+                      className="h-11"
+                      disabled={selectedReviewSubmission.status !== 'pending'}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" onClick={closeReview} className="flex-1 h-11">
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={saveReview}
+                    disabled={isSavingReview || !draftPoints.trim() || selectedReviewSubmission.status !== 'pending'}
+                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    {isSavingReview ? 'Menyimpan...' : selectedReviewSubmission.status === 'pending' ? 'Simpan Poin' : 'Sudah Direview'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
         )}
       </div>
     </div>

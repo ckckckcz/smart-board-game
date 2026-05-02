@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS rounds (
   name TEXT NOT NULL,
   question_counts JSONB NOT NULL DEFAULT '{"C1": 0, "C2": 0, "C3": 0, "C4": 0, "C5": 0, "C6": 0}'::jsonb,
   total_questions INTEGER NOT NULL DEFAULT 0,
+  allowed_question_types JSONB NOT NULL DEFAULT '["multiple_choice", "true_false", "matching", "short_answer", "essay"]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -36,6 +37,37 @@ INSERT INTO rounds (id, name, question_counts, total_questions) VALUES
   ('550e8400-e29b-41d4-a716-446655440002', 'Babak 2 - Siklus Akuntansi', '{"C1": 1, "C2": 1, "C3": 2, "C4": 2, "C5": 0, "C6": 0}'::jsonb, 6),
   ('550e8400-e29b-41d4-a716-446655440003', 'Babak 3 - Laporan Keuangan', '{"C1": 0, "C2": 0, "C3": 1, "C4": 1, "C5": 2, "C6": 2}'::jsonb, 6)
 ON CONFLICT DO NOTHING;
+
+-- 2b. Storage bucket: game-assets (Gambar Soal/Jawaban)
+-- =====================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('game-assets', 'game-assets', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Public read for game-assets" ON storage.objects;
+CREATE POLICY "Public read for game-assets"
+ON storage.objects
+FOR SELECT
+USING (bucket_id = 'game-assets');
+
+DROP POLICY IF EXISTS "Public upload for game-assets" ON storage.objects;
+CREATE POLICY "Public upload for game-assets"
+ON storage.objects
+FOR INSERT
+WITH CHECK (bucket_id = 'game-assets');
+
+DROP POLICY IF EXISTS "Public update for game-assets" ON storage.objects;
+CREATE POLICY "Public update for game-assets"
+ON storage.objects
+FOR UPDATE
+USING (bucket_id = 'game-assets')
+WITH CHECK (bucket_id = 'game-assets');
+
+DROP POLICY IF EXISTS "Public delete for game-assets" ON storage.objects;
+CREATE POLICY "Public delete for game-assets"
+ON storage.objects
+FOR DELETE
+USING (bucket_id = 'game-assets');
 
 -- 3. Table: questions (Bank Soal)
 -- =====================================================
@@ -98,6 +130,29 @@ CREATE TABLE IF NOT EXISTS players (
 -- Create index for faster leaderboard queries
 CREATE INDEX IF NOT EXISTS idx_players_score ON players(score DESC);
 CREATE INDEX IF NOT EXISTS idx_players_round_id ON players(round_id);
+
+-- 4b. Table: manual_image_answer_submissions (Jawaban Esai/Gambar)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS manual_image_answer_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  player_id TEXT NOT NULL,
+  player_name TEXT NOT NULL,
+  round_id UUID REFERENCES rounds(id) ON DELETE SET NULL,
+  round_name TEXT,
+  question_id TEXT,
+  question_type TEXT NOT NULL CHECK (question_type IN ('short_answer', 'essay')),
+  question_text TEXT NOT NULL,
+  image_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
+  review_points INTEGER,
+  score_applied BOOLEAN NOT NULL DEFAULT FALSE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'rejected')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_manual_image_answer_submissions_player_id ON manual_image_answer_submissions(player_id);
+CREATE INDEX IF NOT EXISTS idx_manual_image_answer_submissions_round_id ON manual_image_answer_submissions(round_id);
+CREATE INDEX IF NOT EXISTS idx_manual_image_answer_submissions_status ON manual_image_answer_submissions(status);
 
 -- 5. Table: game_sessions (Sesi Permainan - opsional untuk tracking)
 -- =====================================================

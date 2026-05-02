@@ -15,6 +15,7 @@ export interface DbRound {
     name: string;
     question_counts: Record<string, number>;
     total_questions: number;
+    allowed_question_types: string[];
     created_at: string;
     updated_at: string;
 }
@@ -22,7 +23,7 @@ export interface DbRound {
 export interface DbQuestion {
     id: string;
     category: 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
-    type: 'multiple_choice' | 'true_false' | 'matching' | 'short_answer';
+    type: 'multiple_choice' | 'true_false' | 'matching' | 'short_answer' | 'essay';
     question: string;
     image_url: string | null;
     options: string[] | null;
@@ -36,6 +37,23 @@ export interface DbQuestion {
     points: number;
     created_at: string;
     updated_at: string;
+}
+
+export interface DbManualImageAnswerSubmission {
+    id: string;
+    player_id: string;
+    player_name: string;
+    round_id: string | null;
+    round_name: string | null;
+    question_id: string | null;
+    question_type: 'short_answer' | 'essay';
+    question_text: string;
+    image_urls: string[];
+    review_points: number | null;
+    score_applied: boolean;
+    status: 'pending' | 'reviewed' | 'rejected';
+    created_at: string;
+    reviewed_at: string | null;
 }
 
 export interface DbPlayer {

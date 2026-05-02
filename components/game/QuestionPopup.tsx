@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Clock, Check, HelpCircle, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, type ChangeEvent } from 'react';
+import { Clock, Check, HelpCircle, X, Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,6 +32,7 @@ const QuestionPopup = () => {
   const {
     currentQuestion,
     answerQuestion,
+    submitManualImageAnswer,
     skipQuestion,
     nextQuestion,
     showFeedback,
@@ -41,10 +42,12 @@ const QuestionPopup = () => {
   } = useGameStore();
   const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 30);
   const [isExiting, setIsExiting] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // For different question types
   const [selectedAnswer, setSelectedAnswer] = useState<string | boolean | null>(null);
   const [shortAnswerText, setShortAnswerText] = useState('');
+  const [essayImages, setEssayImages] = useState<Array<{ file: File; previewUrl: string }>>([]);
 
   const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({
     '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
@@ -55,6 +58,7 @@ const QuestionPopup = () => {
     setTimeLeft(currentQuestion.timeLimit);
     setSelectedAnswer(null);
     setShortAnswerText('');
+    setEssayImages([]);
     setMatchingAnswers({
       '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
     });
@@ -67,6 +71,30 @@ const QuestionPopup = () => {
       skipQuestion();
     }, 300);
   }, [skipQuestion]);
+
+  const maxEssayImages = currentQuestion?.shortAnswerImageMaxCount ?? 3;
+
+  const handleEssayImageChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    const remainingSlots = maxEssayImages - essayImages.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    filesToAdd.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEssayImages((prev) => [...prev, { file, previewUrl: String(reader.result || '') }]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    event.target.value = '';
+  }, [essayImages.length, maxEssayImages]);
+
+  const removeEssayImage = useCallback((index: number) => {
+    setEssayImages((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
+  }, []);
 
   useEffect(() => {
     if (showFeedback) return;
@@ -82,7 +110,7 @@ const QuestionPopup = () => {
     return () => clearInterval(timer);
   }, [timeLeft, handleSkip, showFeedback]);
 
-  const handleAnswer = useCallback(() => {
+  const handleAnswer = useCallback(async () => {
     if (!currentQuestion) return;
     switch (currentQuestion.type) {
       case 'true_false':
@@ -99,6 +127,11 @@ const QuestionPopup = () => {
         answerQuestion(trimmed);
         break;
       }
+      case 'essay': {
+        if (essayImages.length === 0) return;
+        await submitManualImageAnswer(essayImages.map((item) => item.file), 'essay');
+        break;
+      }
       case 'matching':
         if (!currentQuestion.matchingLeft) return;
         const answers = currentQuestion.matchingLeft.map((_, i) => {
@@ -110,7 +143,7 @@ const QuestionPopup = () => {
         answerQuestion(answers);
         break;
     }
-  }, [currentQuestion, selectedAnswer, shortAnswerText, matchingAnswers, answerQuestion]);
+  }, [currentQuestion, selectedAnswer, shortAnswerText, essayImages, matchingAnswers, answerQuestion, submitManualImageAnswer]);
 
   const handleContinue = useCallback(() => {
     setIsExiting(true);
@@ -134,10 +167,14 @@ const QuestionPopup = () => {
     ? 'LUAR BIASA!'
     : lastAnswerStatus === 'almost'
       ? 'HAMPIR BENAR!'
+      : lastAnswerStatus === 'pending'
+        ? 'TERKIRIM!'
       : 'OOPS!';
 
   const feedbackSubtitle = lastAnswerStatus === 'correct'
     ? `+${currentQuestion.points} poin`
+    : lastAnswerStatus === 'pending'
+      ? 'Jawaban gambar terkirim. Menunggu penilaian guru.'
     : currentQuestion.type === 'short_answer'
       ? (lastAnswerStatus === 'almost' ? 'Makna jawaban kamu mirip' : 'Makna jawaban kamu berbeda')
       : 'Jawaban kamu belum tepat';
@@ -153,6 +190,8 @@ const QuestionPopup = () => {
         return !!selectedAnswer;
       case 'short_answer':
         return shortAnswerText.trim().length > 0;
+      case 'essay':
+        return essayImages.length > 0;
       case 'matching':
         if (!currentQuestion.matchingLeft) return false;
         return currentQuestion.matchingLeft.every((_, i) => !!matchingAnswers[String(i + 1)]);
@@ -255,14 +294,16 @@ const QuestionPopup = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
-                    <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1">
-                      Jawaban Benar
+                  {lastAnswerStatus !== 'pending' && (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+                      <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1">
+                        Jawaban Benar
+                      </div>
+                      <div className="text-sm font-bold text-emerald-900 whitespace-pre-wrap break-words">
+                        {getCorrectAnswerText(currentQuestion)}
+                      </div>
                     </div>
-                    <div className="text-sm font-bold text-emerald-900 whitespace-pre-wrap break-words">
-                      {getCorrectAnswerText(currentQuestion)}
-                    </div>
-                  </div>
+                  )}
 
                   {/* Explanation panel — shown for ALL types when wrong/almost */}
                   {lastAnswerStatus !== 'correct' && (
@@ -397,6 +438,66 @@ const QuestionPopup = () => {
                   />
                   <p className="text-[11px] text-slate-500 font-semibold text-center">
                     Sistem akan menilai kemiripan jawaban.
+                  </p>
+                </div>
+              )}
+
+              {currentQuestion.type === 'essay' && (
+                <div className="space-y-2">
+                  <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50 p-3 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-blue-700 font-black text-xs uppercase tracking-wider">
+                        <ImageIcon className="w-4 h-4" />
+                        Upload Gambar Jawaban
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-3 rounded-full bg-white text-blue-700 hover:bg-blue-100 border border-blue-200"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={essayImages.length >= maxEssayImages}
+                      >
+                        <Upload className="w-4 h-4 mr-1" />
+                        Tambah
+                      </Button>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleEssayImageChange}
+                        aria-label="Upload gambar jawaban esai"
+                        title="Upload gambar jawaban esai"
+                        className="hidden"
+                      />
+                    </div>
+
+                    {essayImages.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {essayImages.map((item, index) => (
+                          <div key={`${item.file.name}-${index}`} className="relative rounded-xl overflow-hidden border border-blue-200 bg-white shadow-sm">
+                            <img src={item.previewUrl} alt={`Essay upload ${index + 1}`} className="h-28 w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeEssayImage(index)}
+                              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                              aria-label={`Hapus gambar ${index + 1}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-blue-100 bg-white p-3 text-center text-xs font-semibold text-slate-500">
+                        Belum ada gambar diunggah.
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 font-semibold text-center">
+                    Jawaban esai dikirim sebagai gambar dan akan dinilai manual oleh guru.
                   </p>
                 </div>
               )}

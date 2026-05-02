@@ -1,17 +1,28 @@
 'use client'
 
 import { useMemo, useState } from 'react';
-import { Plus, Trash2, Layers } from 'lucide-react';
+import { Plus, Trash2, Layers, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGameStore } from '@/hooks/useGameStore';
-import { Round, QuestionCategory } from '@/types/game';
+import { Round, QuestionCategory, QuestionType } from '@/types/game';
 import { CATEGORY_LABELS } from '@/data/mockData';
 import { sortRoundsForDisplay } from '@/lib/rounds';
+
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  multiple_choice: 'Pilihan Ganda',
+  true_false: 'Benar/Salah',
+  matching: 'Menjodohkan',
+  short_answer: 'Singkat',
+  essay: 'Esai',
+};
+
+const DEFAULT_QUESTION_TYPES: QuestionType[] = [];
 
 const RoundManager = () => {
   const { rounds, addRound, deleteRound } = useGameStore();
   const [roundName, setRoundName] = useState('');
+  const [allowedQuestionTypes, setAllowedQuestionTypes] = useState<QuestionType[]>(DEFAULT_QUESTION_TYPES);
   const [questionCounts, setQuestionCounts] = useState<Record<QuestionCategory, number>>({
     C1: 0, C2: 0, C3: 0, C4: 0, C5: 0, C6: 0,
   });
@@ -29,10 +40,12 @@ const RoundManager = () => {
       name: roundName.trim(),
       questionCounts,
       totalQuestions,
+      allowedQuestionTypes,
     };
 
     addRound(newRound);
     setRoundName('');
+    setAllowedQuestionTypes(DEFAULT_QUESTION_TYPES);
     setQuestionCounts({ C1: 0, C2: 0, C3: 0, C4: 0, C5: 0, C6: 0 });
   };
 
@@ -41,6 +54,14 @@ const RoundManager = () => {
       ...prev,
       [category]: Math.max(0, value),
     }));
+  };
+
+  const toggleQuestionType = (type: QuestionType) => {
+    setAllowedQuestionTypes((prev) => {
+      const isSelected = prev.includes(type);
+      const next = isSelected ? prev.filter((item) => item !== type) : [...prev, type];
+      return next.length > 0 ? next : prev;
+    });
   };
 
   const totalQuestions = Object.values(questionCounts).reduce((a, b) => a + b, 0);
@@ -95,6 +116,8 @@ const RoundManager = () => {
                     pattern="[0-9]*"
                     value={questionCounts[category]}
                     onChange={(e) => updateCount(category, parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+                    aria-label={`Jumlah soal ${category}`}
+                    title={`Jumlah soal ${category}`}
                     className="w-8 sm:w-10 h-6 sm:h-7 text-center font-bold text-base sm:text-lg text-slate-900 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   <button
@@ -110,6 +133,35 @@ const RoundManager = () => {
           </div>
         </div>
 
+        <div className="mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg p-2.5 sm:p-3">
+          <label className="text-xs font-bold text-slate-600 mb-2 block">
+            Konfigurasi Tipe Soal
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((questionType) => {
+              const isSelected = allowedQuestionTypes.includes(questionType);
+              return (
+                <button
+                  key={questionType}
+                  type="button"
+                  onClick={() => toggleQuestionType(questionType)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                    isSelected
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-700'
+                  }`}
+                >
+                  {isSelected && <Check className="w-3 h-3" />}
+                  {QUESTION_TYPE_LABELS[questionType]}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[11px] text-slate-500 font-medium">
+            Pilih minimal 1 tipe. Soal yang diambil saat game dimulai hanya akan mengikuti tipe yang dipilih di sini.
+          </p>
+        </div>
+
         {/* Total & Add Button */}
         <div className="flex items-center justify-between pt-3 border-t border-slate-200 gap-2">
           <div className="flex flex-col">
@@ -118,7 +170,7 @@ const RoundManager = () => {
           </div>
           <Button
             onClick={handleAddRound}
-            disabled={!roundName.trim() || totalQuestions === 0}
+            disabled={!roundName.trim() || totalQuestions === 0 || allowedQuestionTypes.length === 0}
             className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm font-bold rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Plus className="w-4 h-4 mr-1" />
@@ -163,6 +215,17 @@ const RoundManager = () => {
                           {cat}: {round.questionCounts[cat]}
                         </span>
                       )
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {(round.allowedQuestionTypes || DEFAULT_QUESTION_TYPES).map((questionType) => (
+                      <span
+                        key={questionType}
+                        className="text-[9px] sm:text-[10px] px-1.5 py-0.5 bg-blue-50 rounded text-blue-700 font-semibold border border-blue-100"
+                      >
+                        {QUESTION_TYPE_LABELS[questionType]}
+                      </span>
                     ))}
                   </div>
                 </div>

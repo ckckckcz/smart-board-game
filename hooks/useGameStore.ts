@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { GameState, Player, Round, Question, QuestionCategory } from '@/types/game';
-import { roundsService, questionsService, playersService, adminService } from '@/lib/db-service';
+import { GameState, Player, Round, Question, QuestionCategory, ManualImageAnswerSubmission } from '@/types/game';
+import { roundsService, questionsService, playersService, adminService, manualImageAnswerService } from '@/lib/db-service';
 import { gradeShortAnswer } from '@/lib/answer-similarity';
 
 function hashStringToSeed(input: string): number {
@@ -49,6 +49,7 @@ interface GameStore extends GameState {
   rounds: Round[];
   allQuestions: Question[];
   leaderboard: Player[];
+  manualImageAnswerSubmissions: ManualImageAnswerSubmission[];
   adminPin: string;
   isLoading: boolean;
   isInitialized: boolean;
@@ -60,6 +61,7 @@ interface GameStore extends GameState {
   startGame: () => void;
   selectQuestion: (questionId: string) => void;
   answerQuestion: (answer: string | boolean) => void;
+  submitManualImageAnswer: (files: File[], questionType: 'essay' | 'short_answer') => Promise<boolean>;
   skipQuestion: () => void;
   nextQuestion: () => void;
   endGame: () => Promise<void>;
@@ -76,6 +78,8 @@ interface GameStore extends GameState {
   clearLeaderboard: () => Promise<void>;
   refreshLeaderboard: () => Promise<void>;
   renamePlayer: (playerId: string, newName: string) => Promise<boolean>;
+  refreshManualImageAnswerSubmissions: () => Promise<void>;
+  reviewManualImageAnswerSubmission: (submissionId: string, points: number) => Promise<boolean>;
   toggleSound: () => void;
 }
 
@@ -102,6 +106,7 @@ export const useGameStore = create<GameStore>()(
       rounds: [],
       allQuestions: [],
       leaderboard: [],
+      manualImageAnswerSubmissions: [],
       adminPin: '1234',
       isLoading: false,
       isInitialized: false,
@@ -115,10 +120,11 @@ export const useGameStore = create<GameStore>()(
 
         try {
           // Fetch all data from Supabase
-          const [rounds, questions, players, adminPin] = await Promise.all([
+          const [rounds, questions, players, manualImageAnswerSubmissions, adminPin] = await Promise.all([
             roundsService.getAll(),
             questionsService.getAll(),
             playersService.getAll(),
+            manualImageAnswerService.getAll(),
             adminService.getPin(),
           ]);
 
@@ -126,6 +132,7 @@ export const useGameStore = create<GameStore>()(
             rounds,
             allQuestions: questions,
             leaderboard: players,
+            manualImageAnswerSubmissions,
             adminPin,
             isInitialized: true,
             isLoading: false,
@@ -169,6 +176,9 @@ export const useGameStore = create<GameStore>()(
       startGame: () => {
         const { currentRound, allQuestions } = get();
         if (!currentRound) return;
+        const allowedTypes = currentRound.allowedQuestionTypes && currentRound.allowedQuestionTypes.length > 0
+          ? new Set(currentRound.allowedQuestionTypes)
+          : null;
 
         // Select questions deterministically per round (same set for all players),
         // then shuffle final order per game start (random order for each player).
@@ -182,6 +192,7 @@ export const useGameStore = create<GameStore>()(
           // Stabilize ordering so all clients pick the same questions
           const categoryQuestions = allQuestions
             .filter((q) => q.category === category)
+            .filter((q) => !allowedTypes || allowedTypes.has(q.type))
             .slice()
             .sort((a, b) => a.id.localeCompare(b.id));
 
@@ -221,7 +232,7 @@ export const useGameStore = create<GameStore>()(
         if (!currentQuestion || !player) return;
 
         let isCorrect = false;
-        let status: 'correct' | 'almost' | 'wrong' = 'wrong';
+        let status: 'correct' | 'almost' | 'wrong' | 'pending' = 'wrong';
         let similarity: number | null = null;
 
         // Check answer based on question type
@@ -260,6 +271,10 @@ export const useGameStore = create<GameStore>()(
             isCorrect = status === 'correct';
             break;
           }
+          case 'essay':
+            status = 'pending';
+            isCorrect = false;
+            break;
         }
 
         const pointsEarned = isCorrect ? currentQuestion.points : 0;
@@ -274,6 +289,8 @@ export const useGameStore = create<GameStore>()(
               return String(answer).toUpperCase();
             case 'short_answer':
               return String(answer);
+            case 'essay':
+              return 'Gambar jawaban terkirim';
             default:
               return String(answer);
           }
@@ -287,7 +304,7 @@ export const useGameStore = create<GameStore>()(
           lastStudentAnswer: studentAnswerText,
           answeredQuestions: {
             ...answeredQuestions,
-            [currentQuestion.id]: isCorrect ? 'correct' : 'wrong',
+            [currentQuestion.id]: status,
           },
           player: {
             ...player,
@@ -296,6 +313,53 @@ export const useGameStore = create<GameStore>()(
             wrongAnswers: player.wrongAnswers + (isCorrect ? 0 : 1),
           },
         });
+      },
+
+      submitManualImageAnswer: async (files: File[], questionType: 'essay' | 'short_answer') => {
+        const { currentQuestion, currentRound, player } = get();
+        if (!currentQuestion || !player || files.length === 0) return false;
+
+        const imageUrls: string[] = [];
+        for (const file of files.slice(0, 3)) {
+          const url = await questionsService.uploadImage(file);
+          if (url) imageUrls.push(url);
+        }
+
+        if (imageUrls.length === 0) return false;
+
+        const submission: ManualImageAnswerSubmission = {
+          id: `manual_${Date.now()}`,
+          playerId: player.id,
+          playerName: player.name,
+          roundId: currentRound?.id || null,
+          roundName: currentRound?.name,
+          questionId: currentQuestion.id,
+          questionType,
+          questionText: currentQuestion.question,
+          imageUrls,
+          reviewPoints: null,
+          scoreApplied: false,
+          status: 'pending',
+          createdAt: new Date(),
+        };
+
+        const saved = await manualImageAnswerService.create(submission);
+        if (!saved) return false;
+
+        set({
+          manualImageAnswerSubmissions: [saved, ...get().manualImageAnswerSubmissions],
+          showFeedback: true,
+          lastAnswerCorrect: false,
+          lastAnswerStatus: 'pending',
+          lastAnswerSimilarity: null,
+          lastStudentAnswer: 'Jawaban gambar terkirim',
+          answeredQuestions: {
+            ...get().answeredQuestions,
+            [currentQuestion.id]: 'pending',
+          },
+        });
+
+        return true;
       },
 
       skipQuestion: () => {
@@ -527,6 +591,51 @@ export const useGameStore = create<GameStore>()(
         } catch (error) {
           console.error('❌ Failed to refresh leaderboard:', error);
         }
+      },
+
+      refreshManualImageAnswerSubmissions: async () => {
+        try {
+          const submissions = await manualImageAnswerService.getAll();
+          set({ manualImageAnswerSubmissions: submissions });
+        } catch (error) {
+          console.error('❌ Failed to refresh manual image answer submissions:', error);
+        }
+      },
+
+      reviewManualImageAnswerSubmission: async (submissionId: string, points: number) => {
+        const currentSubmission = get().manualImageAnswerSubmissions.find((item) => item.id === submissionId);
+        const updated = await manualImageAnswerService.review(submissionId, points);
+        if (!updated) return false;
+
+        const previousPoints = currentSubmission?.reviewPoints ?? 0;
+        const scoreAlreadyApplied = currentSubmission?.scoreApplied ?? false;
+        const delta = scoreAlreadyApplied ? points - previousPoints : points;
+
+        if (delta !== 0 && updated.roundId) {
+          const updatedPlayer = await playersService.adjustScoreByRoundAndName(
+            updated.roundId,
+            updated.playerName,
+            delta,
+          );
+
+          if (updatedPlayer) {
+            set({
+              leaderboard: get().leaderboard.map((player) =>
+                player.id === updatedPlayer.id ? updatedPlayer : player
+              ),
+            });
+          }
+        }
+
+        set({
+          manualImageAnswerSubmissions: get().manualImageAnswerSubmissions.map((item) =>
+            item.id === submissionId ? updated : item
+          ),
+        });
+
+        await get().refreshLeaderboard();
+
+        return true;
       },
 
       renamePlayer: async (playerId: string, newName: string) => {
