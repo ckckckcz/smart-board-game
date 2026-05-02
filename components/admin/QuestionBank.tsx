@@ -85,6 +85,7 @@ const QuestionBank = () => {
   // Short Answer (Singkat)
   const [shortAnswerKey, setShortAnswerKey] = useState('');
   const [essayInstructions, setEssayInstructions] = useState('');
+  const [essayImageMaxCount, setEssayImageMaxCount] = useState(3);
 
   // Matching (Simplified Logic for Flex Counts)
   const [matchingLeftInput, setMatchingLeftInput] = useState<MatchingLeftItem[]>([
@@ -186,6 +187,7 @@ const QuestionBank = () => {
     setTrueFalseAnswer('');
     setShortAnswerKey('');
     setEssayInstructions('');
+    setEssayImageMaxCount(3);
     setExplanation('');
     setMatchingLeftInput([
       { text: '' }, { text: '' }, { text: '' }
@@ -221,6 +223,7 @@ const QuestionBank = () => {
 
     if (type === 'essay') {
       newQuestion.requiresImageAnswer = true;
+      newQuestion.essayImageMaxCount = essayImageMaxCount;
     }
 
     // Add images if provided
@@ -266,6 +269,7 @@ const QuestionBank = () => {
           return;
         }
         newQuestion.requiresImageAnswer = true;
+        newQuestion.essayImageMaxCount = essayImageMaxCount;
         break;
 
       case 'matching':
@@ -558,6 +562,20 @@ const QuestionBank = () => {
                 <p className="text-[11px] text-blue-700 font-semibold">
                   Esai tidak pakai jawaban kunci. Siswa upload gambar, lalu guru memberi poin manual.
                 </p>
+                <div className="space-y-2 pt-2">
+                  <Label className="text-xs font-bold text-blue-600 uppercase tracking-wider">Maksimal Gambar Jawaban</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={essayImageMaxCount}
+                    onChange={(e) => setEssayImageMaxCount(Math.max(1, Number(e.target.value) || 1))}
+                    className="bg-white border border-slate-200 text-slate-900 h-11"
+                  />
+                  <p className="text-[11px] text-slate-500 font-semibold">
+                    Contoh: isi 4 kalau siswa boleh mengirim 4 gambar jawaban.
+                  </p>
+                </div>
               </div>
             )}
 

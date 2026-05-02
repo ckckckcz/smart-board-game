@@ -82,6 +82,10 @@ function dbQuestionToQuestion(dbQuestion: DbQuestion): Question {
         question.imageUrls = dbQuestion.image_urls;
     }
 
+    if (dbQuestion.essay_image_max_count !== null) {
+        question.essayImageMaxCount = dbQuestion.essay_image_max_count;
+    }
+
     return question;
 }
 
@@ -100,6 +104,10 @@ function questionToDbQuestion(question: Question): Partial<DbQuestion> {
 
     if (question.type === 'essay' && !dbQuestion.essay_answer) {
         dbQuestion.essay_answer = '';
+    }
+
+    if (question.type === 'essay') {
+        dbQuestion.essay_image_max_count = question.essayImageMaxCount ?? 3;
     }
 
     if (question.imageUrl) {

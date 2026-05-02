@@ -72,7 +72,7 @@ const QuestionPopup = () => {
     }, 300);
   }, [skipQuestion]);
 
-  const maxEssayImages = currentQuestion?.shortAnswerImageMaxCount ?? 3;
+  const maxEssayImages = currentQuestion?.essayImageMaxCount ?? currentQuestion?.shortAnswerImageMaxCount ?? 3;
 
   const handleEssayImageChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

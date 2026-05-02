@@ -23,6 +23,7 @@ export interface Question {
   imageUrl?: string; // Optional image for each question
   imageUrls?: string[]; // Multiple images support (up to 3)
   shortAnswerImageMaxCount?: number;
+  essayImageMaxCount?: number;
   explanation?: string; // Optional explanation shown in feedback
   // For multiple choice
   options?: string[];

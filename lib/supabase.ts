@@ -33,6 +33,7 @@ export interface DbQuestion {
     matching_answer: string | null;
     matching_explanation: string | null;
     image_urls: string[] | null;
+    essay_image_max_count: number | null;
     time_limit: number;
     points: number;
     created_at: string;

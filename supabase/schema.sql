@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS questions (
   correct_answer TEXT,
   -- For essay
   essay_answer TEXT,
+  essay_image_max_count INTEGER NOT NULL DEFAULT 3,
   -- For matching
   matching_pairs JSONB, -- Array of {left, right}
   matching_answer TEXT, -- Format: "1A-2B-3C"
