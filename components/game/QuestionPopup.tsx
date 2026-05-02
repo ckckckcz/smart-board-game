@@ -42,7 +42,9 @@ const QuestionPopup = () => {
   } = useGameStore();
   const [timeLeft, setTimeLeft] = useState(currentQuestion?.timeLimit || 30);
   const [isExiting, setIsExiting] = useState(false);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const submitLockRef = useRef(false);
 
   // For different question types
   const [selectedAnswer, setSelectedAnswer] = useState<string | boolean | null>(null);
@@ -63,6 +65,8 @@ const QuestionPopup = () => {
       '1': '', '2': '', '3': '', '4': '', '5': '', '6': ''
     });
     setIsExiting(false);
+    setIsSubmittingAnswer(false);
+    submitLockRef.current = false;
   }, [currentQuestion]);
 
   const handleSkip = useCallback(() => {
@@ -111,37 +115,56 @@ const QuestionPopup = () => {
   }, [timeLeft, handleSkip, showFeedback]);
 
   const handleAnswer = useCallback(async () => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || submitLockRef.current) return;
+    let answers = '';
+
     switch (currentQuestion.type) {
       case 'true_false':
         if (selectedAnswer === null) return;
-        answerQuestion(selectedAnswer as boolean);
         break;
       case 'multiple_choice':
         if (!selectedAnswer) return;
-        answerQuestion(selectedAnswer as string);
         break;
-      case 'short_answer': {
-        const trimmed = shortAnswerText.trim();
-        if (!trimmed) return;
-        answerQuestion(trimmed);
+      case 'short_answer':
+        if (!shortAnswerText.trim()) return;
         break;
-      }
-      case 'essay': {
+      case 'essay':
         if (essayImages.length === 0) return;
-        await submitManualImageAnswer(essayImages.map((item) => item.file), 'essay');
         break;
-      }
       case 'matching':
         if (!currentQuestion.matchingLeft) return;
-        const answers = currentQuestion.matchingLeft.map((_, i) => {
+        if (currentQuestion.matchingLeft.some((_, i) => !matchingAnswers[String(i + 1)])) return;
+        answers = currentQuestion.matchingLeft.map((_, i) => {
           const num = i + 1;
           return `${num}${matchingAnswers[String(num)] || ''}`;
         }).join('-');
-
-        if (currentQuestion.matchingLeft.some((_, i) => !matchingAnswers[String(i + 1)])) return;
-        answerQuestion(answers);
         break;
+    }
+
+    submitLockRef.current = true;
+    setIsSubmittingAnswer(true);
+
+    try {
+      switch (currentQuestion.type) {
+        case 'true_false':
+          answerQuestion(selectedAnswer as boolean);
+          break;
+        case 'multiple_choice':
+          answerQuestion(selectedAnswer as string);
+          break;
+        case 'short_answer':
+          answerQuestion(shortAnswerText.trim());
+          break;
+        case 'essay':
+          await submitManualImageAnswer(essayImages.map((item) => item.file), 'essay');
+          break;
+        case 'matching':
+          answerQuestion(answers);
+          break;
+      }
+    } finally {
+      setIsSubmittingAnswer(false);
+      submitLockRef.current = false;
     }
   }, [currentQuestion, selectedAnswer, shortAnswerText, essayImages, matchingAnswers, answerQuestion, submitManualImageAnswer]);
 
@@ -182,7 +205,7 @@ const QuestionPopup = () => {
   const isUrgent = timeLeft <= 10;
 
   const canAnswer = () => {
-    if (showFeedback) return false;
+    if (showFeedback || isSubmittingAnswer) return false;
     switch (currentQuestion.type) {
       case 'true_false':
         return selectedAnswer !== null;
@@ -577,7 +600,7 @@ const QuestionPopup = () => {
                 }
               `}
             >
-              SIMPAN JAWABAN
+              {isSubmittingAnswer ? 'MENGIRIM...' : 'SIMPAN JAWABAN'}
             </Button>
           )}
         </div>
